@@ -8,360 +8,118 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --bg-primary: #060b14;
-            --bg-secondary: #0c1322;
-            --bg-card: rgba(12, 19, 34, 0.85);
-            --border-color: rgba(255,255,255,0.06);
-            --text-primary: #eef2f7;
-            --text-secondary: #8b9ab5;
-            --text-muted: #546380;
-            --green: #10b981;
-            --green-soft: rgba(16,185,129,0.12);
-            --red: #f43f5e;
-            --red-soft: rgba(244,63,94,0.12);
-            --cyan: #06b6d4;
-            --cyan-soft: rgba(6,182,212,0.12);
-            --amber: #f59e0b;
-            --amber-soft: rgba(245,158,11,0.12);
-            --radius: 16px;
-            --radius-sm: 10px;
+            --bg-primary:#060b14;--bg-secondary:#0c1322;
+            --bg-card:rgba(12,19,34,0.85);--border-color:rgba(255,255,255,0.06);
+            --text-primary:#eef2f7;--text-secondary:#8b9ab5;--text-muted:#546380;
+            --green:#10b981;--green-soft:rgba(16,185,129,0.12);
+            --red:#f43f5e;--red-soft:rgba(244,63,94,0.12);
+            --cyan:#06b6d4;--cyan-soft:rgba(6,182,212,0.12);
+            --amber:#f59e0b;--amber-soft:rgba(245,158,11,0.12);
+            --radius:16px;--radius-sm:10px;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 600px 400px at 15% 20%, rgba(16,185,129,0.06) 0%, transparent 70%),
-                radial-gradient(ellipse 500px 500px at 85% 75%, rgba(6,182,212,0.05) 0%, transparent 70%),
-                radial-gradient(ellipse 400px 300px at 50% 50%, rgba(244,63,94,0.03) 0%, transparent 70%);
-            z-index: 0;
-            animation: bgShift 25s ease-in-out infinite alternate;
-            pointer-events: none;
-        }
-        @keyframes bgShift {
-            0%   { opacity:1; transform:scale(1); }
-            50%  { opacity:0.8; transform:scale(1.05); }
-            100% { opacity:1; transform:scale(1); }
-        }
-        .particles { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0;
-            animation: pFloat linear infinite;
-        }
-        @keyframes pFloat {
-            0%   { transform:translateY(100vh) scale(0); opacity:0; }
-            15%  { opacity:1; }
-            85%  { opacity:0.6; }
-            100% { transform:translateY(-10vh) scale(1); opacity:0; }
-        }
-        .navbar-custom {
-            background: rgba(6,11,20,0.92);
-            backdrop-filter: blur(24px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .brand {
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--text-primary) !important;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .brand i { color: var(--green); font-size: 1.5rem; }
-        .brand span { color: var(--green); }
-        .nav-btn {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            padding: 7px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Poppins', sans-serif;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .nav-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
-        .wa-indicator {
-            display: inline-flex; align-items: center; gap: 5px;
-            font-size: 0.7rem; color: var(--text-muted); margin-left: 6px;
-        }
-        .wa-dot { width:7px; height:7px; border-radius:50%; background: var(--text-muted); flex-shrink:0; }
-        .wa-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
-        .wa-dot.off { background: var(--red); }
-        .main-wrap { position:relative; z-index:1; padding: 1.5rem 0 3rem; }
-        .s-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 1.3rem 1.4rem;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.35s;
-        }
-        .s-card::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-        .s-card.c-saldo::after  { background: linear-gradient(90deg, var(--cyan), #22d3ee); }
-        .s-card.c-masuk::after  { background: linear-gradient(90deg, var(--green), #34d399); }
-        .s-card.c-keluar::after { background: linear-gradient(90deg, var(--red), #fb7185); }
-        .s-card.c-total::after  { background: linear-gradient(90deg, var(--amber), #fbbf24); }
-        .s-card:hover { transform: translateY(-5px); box-shadow: 0 12px 36px rgba(0,0,0,0.35); }
-        .s-icon {
-            width:46px; height:46px; border-radius:12px;
-            display:flex; align-items:center; justify-content:center; font-size:1.15rem;
-        }
-        .s-icon.i-saldo  { background: var(--cyan-soft); color: var(--cyan); }
-        .s-icon.i-masuk  { background: var(--green-soft); color: var(--green); }
-        .s-icon.i-keluar { background: var(--red-soft); color: var(--red); }
-        .s-icon.i-total  { background: var(--amber-soft); color: var(--amber); }
-        .s-label {
-            font-size:0.72rem; font-weight:600; color:var(--text-muted);
-            text-transform:uppercase; letter-spacing:0.6px; margin-bottom:2px;
-        }
-        .s-val { font-size:1.35rem; font-weight:700; line-height:1.25; }
-        .s-val.v-saldo  { color: var(--cyan); }
-        .s-val.v-masuk  { color: var(--green); }
-        .s-val.v-keluar { color: var(--red); }
-        .s-val.v-total  { color: var(--amber); }
-        .sec-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .sec-title {
-            font-size:1.05rem; font-weight:700; margin-bottom:1.2rem;
-            display:flex; align-items:center; gap:10px;
-        }
-        .sec-title i { font-size:0.95rem; color: var(--green); }
-        .flabel {
-            font-size:0.75rem; font-weight:600; color:var(--text-secondary);
-            margin-bottom:5px; text-transform:uppercase; letter-spacing:0.3px; display:block;
-        }
-        .finput, .fselect {
-            background: rgba(255,255,255,0.035);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-radius: var(--radius-sm);
-            padding: 10px 14px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.88rem;
-            transition: all 0.25s;
-            width: 100%;
-        }
-        .finput:focus, .fselect:focus {
-            background: rgba(255,255,255,0.06);
-            border-color: var(--green);
-            box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
-            outline: none;
-            color: var(--text-primary);
-        }
-        .finput::placeholder { color: var(--text-muted); }
-        .fselect option { background: var(--bg-secondary); color: var(--text-primary); }
-        .nominal-wrap { position:relative; }
-        .nominal-wrap .prefix {
-            position:absolute; left:14px; top:50%; transform:translateY(-50%);
-            color:var(--text-muted); font-size:0.85rem; font-weight:600; pointer-events:none;
-        }
-        .nominal-wrap .finput { padding-left:40px; }
-        .btn-simpan {
-            background: linear-gradient(135deg, var(--green), #059669);
-            color:#fff; border:none; border-radius:var(--radius-sm);
-            padding:11px 26px; font-family:'Poppins',sans-serif;
-            font-weight:600; font-size:0.88rem; cursor:pointer;
-            transition: all 0.3s; display:inline-flex; align-items:center; gap:8px;
-        }
-        .btn-simpan:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(16,185,129,0.3); }
-        .btn-simpan:active { transform:translateY(0); }
-        .btn-simpan:disabled { opacity:0.5; cursor:not-allowed; transform:none!important; box-shadow:none!important; }
-        .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.5s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        .chart-box { position:relative; height:280px; }
-        .tbl-wrap { overflow-x:auto; }
-        .tbl { width:100%; border-collapse:separate; border-spacing:0; }
-        .tbl thead th {
-            background:rgba(255,255,255,0.025); color:var(--text-muted);
-            font-size:0.72rem; font-weight:600; text-transform:uppercase;
-            letter-spacing:0.5px; padding:11px 13px;
-            border-bottom:1px solid var(--border-color); white-space:nowrap;
-        }
-        .tbl tbody td {
-            padding:11px 13px; border-bottom:1px solid var(--border-color);
-            font-size:0.83rem; color:var(--text-secondary); vertical-align:middle;
-        }
-        .tbl tbody tr { transition:background 0.2s; }
-        .tbl tbody tr:hover { background:rgba(255,255,255,0.02); }
-        .badge-m {
-            background:var(--green-soft); color:var(--green);
-            padding:3px 11px; border-radius:20px; font-size:0.72rem; font-weight:600;
-        }
-        .badge-k {
-            background:var(--red-soft); color:var(--red);
-            padding:3px 11px; border-radius:20px; font-size:0.72rem; font-weight:600;
-        }
-        .btn-act {
-            background:rgba(255,255,255,0.04); border:1px solid var(--border-color);
-            color:var(--text-secondary); width:30px; height:30px; border-radius:8px;
-            display:inline-flex; align-items:center; justify-content:center;
-            cursor:pointer; transition:all 0.2s; font-size:0.75rem;
-        }
-        .btn-act:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); }
-        .btn-act.del:hover { background:var(--red-soft); color:var(--red); border-color:rgba(244,63,94,0.3); }
-        .filter-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1rem; align-items:flex-end; }
-        .filter-row .fg { flex:1; min-width:140px; }
-        .pag { display:flex; gap:5px; justify-content:center; margin-top:1rem; flex-wrap:wrap; }
-        .pg-btn {
-            background:rgba(255,255,255,0.04); border:1px solid var(--border-color);
-            color:var(--text-secondary); min-width:34px; height:34px; border-radius:8px;
-            display:flex; align-items:center; justify-content:center;
-            cursor:pointer; transition:all 0.2s; font-size:0.82rem;
-            font-family:'Poppins',sans-serif; padding:0 4px;
-        }
-        .pg-btn:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); }
-        .pg-btn.active { background:var(--green); color:#fff; border-color:var(--green); }
-        .pg-btn:disabled { opacity:0.3; cursor:not-allowed; }
-        .empty { text-align:center; padding:3rem 1rem; color:var(--text-muted); }
-        .empty i { font-size:2.5rem; margin-bottom:0.8rem; opacity:0.25; display:block; }
-        .empty p { font-size:0.85rem; }
-        .toast-wrap { position:fixed; top:75px; right:16px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
-        .tst {
-            background:rgba(12,19,34,0.95); border:1px solid var(--border-color);
-            border-radius:var(--radius-sm); padding:13px 18px;
-            display:flex; align-items:flex-start; gap:11px;
-            min-width:280px; max-width:420px;
-            box-shadow:0 12px 44px rgba(0,0,0,0.5);
-            backdrop-filter:blur(12px);
-            animation:tstIn 0.35s cubic-bezier(.4,0,.2,1);
-        }
-        .tst.out { animation:tstOut 0.25s forwards; }
-        .tst.ts { border-left:3px solid var(--green); }
-        .tst.te { border-left:3px solid var(--red); }
-        .tst.ti { border-left:3px solid var(--cyan); }
-        .tst.tw { border-left:3px solid var(--amber); }
-        .tst-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
-        .tst.ts .tst-icon { color:var(--green); }
-        .tst.te .tst-icon { color:var(--red); }
-        .tst.ti .tst-icon { color:var(--cyan); }
-        .tst.tw .tst-icon { color:var(--amber); }
-        .tst-msg { font-size:0.82rem; color:var(--text-secondary); line-height:1.45; }
-        .tst-detail { font-size:0.72rem; color:var(--text-muted); margin-top:4px; font-style:italic; }
-        @keyframes tstIn  { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
-        @keyframes tstOut { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
-        .modal-bg {
-            position:fixed; inset:0; background:rgba(0,0,0,0.7);
-            backdrop-filter:blur(4px); z-index:2000;
-            display:flex; align-items:center; justify-content:center;
-            padding:16px; animation:mFadeIn 0.2s;
-        }
-        .modal-box {
-            background:var(--bg-secondary); border:1px solid var(--border-color);
-            border-radius:var(--radius); padding:1.5rem;
-            width:100%; max-width:500px;
-            animation:mSlideIn 0.3s cubic-bezier(.4,0,.2,1);
-            max-height:90vh; overflow-y:auto;
-        }
-        @keyframes mFadeIn  { from{opacity:0} to{opacity:1} }
-        @keyframes mSlideIn { from{transform:scale(0.92) translateY(16px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
-        .m-title { font-size:1.05rem; font-weight:700; margin-bottom:1.2rem; display:flex; align-items:center; gap:10px; }
-        .m-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:1.3rem; }
-        .btn-cancel {
-            background:rgba(255,255,255,0.04); border:1px solid var(--border-color);
-            color:var(--text-secondary); border-radius:var(--radius-sm);
-            padding:9px 18px; font-family:'Poppins',sans-serif; font-weight:500;
-            font-size:0.83rem; cursor:pointer; transition:all 0.2s;
-        }
-        .btn-cancel:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); }
-        .btn-del {
-            background:linear-gradient(135deg,var(--red),#e11d48); color:#fff; border:none;
-            border-radius:var(--radius-sm); padding:9px 18px; font-family:'Poppins',sans-serif;
-            font-weight:600; font-size:0.83rem; cursor:pointer; transition:all 0.3s;
-        }
-        .btn-del:hover { box-shadow:0 6px 20px rgba(244,63,94,0.35); }
-        .btn-upd {
-            background:linear-gradient(135deg,var(--cyan),#0891b2); color:#fff; border:none;
-            border-radius:var(--radius-sm); padding:9px 18px; font-family:'Poppins',sans-serif;
-            font-weight:600; font-size:0.83rem; cursor:pointer; transition:all 0.3s;
-        }
-        .btn-upd:hover { box-shadow:0 6px 20px rgba(6,182,212,0.35); }
-        .btn-config-save {
-            background:linear-gradient(135deg,var(--amber),#d97706); color:#fff; border:none;
-            border-radius:var(--radius-sm); padding:9px 18px; font-family:'Poppins',sans-serif;
-            font-weight:600; font-size:0.83rem; cursor:pointer; transition:all 0.3s;
-        }
-        .btn-config-save:hover { box-shadow:0 6px 20px rgba(245,158,11,0.35); }
-        .btn-test {
-            background:linear-gradient(135deg,#25d366,#128c7e); color:#fff; border:none;
-            border-radius:var(--radius-sm); padding:9px 18px; font-family:'Poppins',sans-serif;
-            font-weight:600; font-size:0.83rem; cursor:pointer; transition:all 0.3s;
-            display:inline-flex; align-items:center; gap:6px;
-        }
-        .btn-test:hover { box-shadow:0 6px 20px rgba(37,211,102,0.35); }
-        .btn-test:disabled { opacity:0.5; cursor:not-allowed; }
-        .info-box {
-            background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.15);
-            border-radius:var(--radius-sm); padding:12px 14px;
-            font-size:0.78rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1rem;
-        }
-        .info-box i { color:var(--cyan); margin-right:4px; }
-        .info-box a { color:var(--cyan); text-decoration:underline; }
-        .warn-box {
-            background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.15);
-            border-radius:var(--radius-sm); padding:12px 14px;
-            font-size:0.78rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1rem;
-        }
-        .warn-box i { color:var(--amber); margin-right:4px; }
-        .success-box {
-            background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15);
-            border-radius:var(--radius-sm); padding:12px 14px;
-            font-size:0.78rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1rem;
-        }
-        .success-box i { color:var(--green); margin-right:4px; }
-        .pag-info { text-align:center; font-size:0.75rem; color:var(--text-muted); margin-top:8px; }
-        ::-webkit-scrollbar { width:5px; height:5px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
-        ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.2); }
-        @media(max-width:768px) {
-            .main-wrap { padding:1rem 0 2rem; }
-            .sec-card { padding:1rem; }
-            .s-val { font-size:1.1rem; }
-            .filter-row { flex-direction:column; }
-            .filter-row .fg { min-width:100%; }
-            .chart-box { height:220px; }
-            .tst { min-width:240px; max-width:calc(100vw - 32px); }
-            .wa-indicator { display:none; }
-        }
-        .fade-up {
-            opacity:0; transform:translateY(20px);
-            animation:fadeUp 0.5s cubic-bezier(.4,0,.2,1) forwards;
-        }
-        @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
-        .fade-up:nth-child(2) { animation-delay:0.05s; }
-        .fade-up:nth-child(3) { animation-delay:0.1s; }
-        .fade-up:nth-child(4) { animation-delay:0.15s; }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Poppins',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;}
+        body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 600px 400px at 15% 20%,rgba(16,185,129,0.06) 0%,transparent 70%),radial-gradient(ellipse 500px 500px at 85% 75%,rgba(6,182,212,0.05) 0%,transparent 70%),radial-gradient(ellipse 400px 300px at 50% 50%,rgba(244,63,94,0.03) 0%,transparent 70%);z-index:0;animation:bgShift 25s ease-in-out infinite alternate;pointer-events:none;}
+        @keyframes bgShift{0%{opacity:1;transform:scale(1)}50%{opacity:.8;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+        .particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+        .particle{position:absolute;border-radius:50%;opacity:0;animation:pFloat linear infinite;}
+        @keyframes pFloat{0%{transform:translateY(100vh) scale(0);opacity:0}15%{opacity:1}85%{opacity:.6}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+        .navbar-custom{background:rgba(6,11,20,0.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border-color);padding:.75rem 0;position:sticky;top:0;z-index:1000;}
+        .brand{font-weight:800;font-size:1.3rem;color:var(--text-primary)!important;text-decoration:none;display:flex;align-items:center;gap:10px;}
+        .brand i{color:var(--green);font-size:1.5rem;} .brand span{color:var(--green);}
+        .nav-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border-color);color:var(--text-secondary);padding:7px 14px;border-radius:var(--radius-sm);font-size:.8rem;cursor:pointer;transition:all .3s;font-family:'Poppins',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+        .nav-btn:hover{background:rgba(255,255,255,0.08);color:var(--text-primary);}
+        .wa-indicator{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;color:var(--text-muted);margin-left:6px;}
+        .wa-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
+        .wa-dot.on{background:var(--green);box-shadow:0 0 6px var(--green);} .wa-dot.off{background:var(--red);}
+        .fb-indicator{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;margin-left:6px;}
+        .fb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .fb-dot.on{background:#4caf50;box-shadow:0 0 6px #4caf50;} .fb-dot.off{background:var(--red);}
+        .main-wrap{position:relative;z-index:1;padding:1.5rem 0 3rem;}
+        .s-card{background:var(--bg-card);backdrop-filter:blur(12px);border:1px solid var(--border-color);border-radius:var(--radius);padding:1.3rem 1.4rem;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.4,0,.2,1),box-shadow .35s;}
+        .s-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+        .s-card.c-saldo::after{background:linear-gradient(90deg,var(--cyan),#22d3ee);}
+        .s-card.c-masuk::after{background:linear-gradient(90deg,var(--green),#34d399);}
+        .s-card.c-keluar::after{background:linear-gradient(90deg,var(--red),#fb7185);}
+        .s-card.c-total::after{background:linear-gradient(90deg,var(--amber),#fbbf24);}
+        .s-card:hover{transform:translateY(-5px);box-shadow:0 12px 36px rgba(0,0,0,0.35);}
+        .s-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;}
+        .s-icon.i-saldo{background:var(--cyan-soft);color:var(--cyan);} .s-icon.i-masuk{background:var(--green-soft);color:var(--green);}
+        .s-icon.i-keluar{background:var(--red-soft);color:var(--red);} .s-icon.i-total{background:var(--amber-soft);color:var(--amber);}
+        .s-label{font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;}
+        .s-val{font-size:1.35rem;font-weight:700;line-height:1.25;}
+        .s-val.v-saldo{color:var(--cyan);} .s-val.v-masuk{color:var(--green);}
+        .s-val.v-keluar{color:var(--red);} .s-val.v-total{color:var(--amber);}
+        .sec-card{background:var(--bg-card);backdrop-filter:blur(12px);border:1px solid var(--border-color);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
+        .sec-title{font-size:1.05rem;font-weight:700;margin-bottom:1.2rem;display:flex;align-items:center;gap:10px;}
+        .sec-title i{font-size:.95rem;color:var(--green);}
+        .flabel{font-size:.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;display:block;}
+        .finput,.fselect{background:rgba(255,255,255,0.035);border:1px solid var(--border-color);color:var(--text-primary);border-radius:var(--radius-sm);padding:10px 14px;font-family:'Poppins',sans-serif;font-size:.88rem;transition:all .25s;width:100%;}
+        .finput:focus,.fselect:focus{background:rgba(255,255,255,0.06);border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,0.12);outline:none;color:var(--text-primary);}
+        .finput::placeholder{color:var(--text-muted);} .fselect option{background:var(--bg-secondary);color:var(--text-primary);}
+        .nominal-wrap{position:relative;} .nominal-wrap .prefix{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.85rem;font-weight:600;pointer-events:none;} .nominal-wrap .finput{padding-left:40px;}
+        .btn-simpan{background:linear-gradient(135deg,var(--green),#059669);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 26px;font-family:'Poppins',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px;}
+        .btn-simpan:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(16,185,129,0.3);} .btn-simpan:active{transform:translateY(0);} .btn-simpan:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+        .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .5s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .chart-box{position:relative;height:280px;}
+        .tbl-wrap{overflow-x:auto;}
+        .tbl{width:100%;border-collapse:separate;border-spacing:0;}
+        .tbl thead th{background:rgba(255,255,255,0.025);color:var(--text-muted);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:11px 13px;border-bottom:1px solid var(--border-color);white-space:nowrap;}
+        .tbl tbody td{padding:11px 13px;border-bottom:1px solid var(--border-color);font-size:.83rem;color:var(--text-secondary);vertical-align:middle;}
+        .tbl tbody tr{transition:background .2s;} .tbl tbody tr:hover{background:rgba(255,255,255,0.02);}
+        .badge-m{background:var(--green-soft);color:var(--green);padding:3px 11px;border-radius:20px;font-size:.72rem;font-weight:600;}
+        .badge-k{background:var(--red-soft);color:var(--red);padding:3px 11px;border-radius:20px;font-size:.72rem;font-weight:600;}
+        .btn-act{background:rgba(255,255,255,0.04);border:1px solid var(--border-color);color:var(--text-secondary);width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:.75rem;}
+        .btn-act:hover{background:rgba(255,255,255,0.1);color:var(--text-primary);} .btn-act.del:hover{background:var(--red-soft);color:var(--red);border-color:rgba(244,63,94,0.3);}
+        .filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;align-items:flex-end;} .filter-row .fg{flex:1;min-width:140px;}
+        .pag{display:flex;gap:5px;justify-content:center;margin-top:1rem;flex-wrap:wrap;}
+        .pg-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border-color);color:var(--text-secondary);min-width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:.82rem;font-family:'Poppins',sans-serif;padding:0 4px;}
+        .pg-btn:hover{background:rgba(255,255,255,0.1);color:var(--text-primary);} .pg-btn.active{background:var(--green);color:#fff;border-color:var(--green);} .pg-btn:disabled{opacity:.3;cursor:not-allowed;}
+        .empty{text-align:center;padding:3rem 1rem;color:var(--text-muted);} .empty i{font-size:2.5rem;margin-bottom:.8rem;opacity:.25;display:block;} .empty p{font-size:.85rem;}
+        .toast-wrap{position:fixed;top:75px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+        .tst{background:rgba(12,19,34,0.95);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:13px 18px;display:flex;align-items:flex-start;gap:11px;min-width:280px;max-width:420px;box-shadow:0 12px 44px rgba(0,0,0,0.5);backdrop-filter:blur(12px);animation:tstIn .35s cubic-bezier(.4,0,.2,1);}
+        .tst.out{animation:tstOut .25s forwards;} .tst.ts{border-left:3px solid var(--green);} .tst.te{border-left:3px solid var(--red);} .tst.ti{border-left:3px solid var(--cyan);} .tst.tw{border-left:3px solid var(--amber);}
+        .tst-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;} .tst.ts .tst-icon{color:var(--green);} .tst.te .tst-icon{color:var(--red);} .tst.ti .tst-icon{color:var(--cyan);} .tst.tw .tst-icon{color:var(--amber);}
+        .tst-msg{font-size:.82rem;color:var(--text-secondary);line-height:1.45;}
+        @keyframes tstIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes tstOut{from{transform:translateX(0);opacity:1}to{transform:translateX(110%);opacity:0}}
+        .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;animation:mFadeIn .2s;}
+        .modal-box{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:520px;animation:mSlideIn .3s cubic-bezier(.4,0,.2,1);max-height:90vh;overflow-y:auto;}
+        @keyframes mFadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes mSlideIn{from{transform:scale(.92) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+        .m-title{font-size:1.05rem;font-weight:700;margin-bottom:1.2rem;display:flex;align-items:center;gap:10px;}
+        .m-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:1.3rem;}
+        .btn-cancel{background:rgba(255,255,255,0.04);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:var(--radius-sm);padding:9px 18px;font-family:'Poppins',sans-serif;font-weight:500;font-size:.83rem;cursor:pointer;transition:all .2s;}
+        .btn-cancel:hover{background:rgba(255,255,255,0.1);color:var(--text-primary);}
+        .btn-del{background:linear-gradient(135deg,var(--red),#e11d48);color:#fff;border:none;border-radius:var(--radius-sm);padding:9px 18px;font-family:'Poppins',sans-serif;font-weight:600;font-size:.83rem;cursor:pointer;transition:all .3s;}
+        .btn-del:hover{box-shadow:0 6px 20px rgba(244,63,94,0.35);}
+        .btn-upd{background:linear-gradient(135deg,var(--cyan),#0891b2);color:#fff;border:none;border-radius:var(--radius-sm);padding:9px 18px;font-family:'Poppins',sans-serif;font-weight:600;font-size:.83rem;cursor:pointer;transition:all .3s;}
+        .btn-upd:hover{box-shadow:0 6px 20px rgba(6,182,212,0.35);}
+        .btn-config-save{background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;border:none;border-radius:var(--radius-sm);padding:9px 18px;font-family:'Poppins',sans-serif;font-weight:600;font-size:.83rem;cursor:pointer;transition:all .3s;}
+        .btn-config-save:hover{box-shadow:0 6px 20px rgba(245,158,11,0.35);}
+        .btn-test{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;border:none;border-radius:var(--radius-sm);padding:9px 18px;font-family:'Poppins',sans-serif;font-weight:600;font-size:.83rem;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:6px;}
+        .btn-test:hover{box-shadow:0 6px 20px rgba(37,211,102,0.35);} .btn-test:disabled{opacity:.5;cursor:not-allowed;}
+        .info-box{background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);border-radius:var(--radius-sm);padding:12px 14px;font-size:.78rem;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem;}
+        .info-box i{color:var(--cyan);margin-right:4px;} .info-box a{color:var(--cyan);text-decoration:underline;}
+        .warn-box{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);border-radius:var(--radius-sm);padding:12px 14px;font-size:.78rem;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem;}
+        .warn-box i{color:var(--amber);margin-right:4px;}
+        .success-box{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:var(--radius-sm);padding:12px 14px;font-size:.78rem;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem;}
+        .success-box i{color:var(--green);margin-right:4px;}
+        .pag-info{text-align:center;font-size:.75rem;color:var(--text-muted);margin-top:8px;}
+        .sync-badge{font-size:.65rem;background:rgba(76,175,80,0.15);color:#4caf50;padding:2px 8px;border-radius:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+        .sync-badge.off{background:var(--red-soft);color:var(--red);}
+        .divider{border:none;border-top:1px solid var(--border-color);margin:1.2rem 0;}
+        ::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+        @media(max-width:768px){.main-wrap{padding:1rem 0 2rem;}.sec-card{padding:1rem;}.s-val{font-size:1.1rem;}.filter-row{flex-direction:column;}.filter-row .fg{min-width:100%;}.chart-box{height:220px;}.tst{min-width:240px;max-width:calc(100vw - 32px);}.wa-indicator,.fb-indicator{display:none;}.m-actions{flex-wrap:wrap;}}
+        .fade-up{opacity:0;transform:translateY(20px);animation:fadeUp .5s cubic-bezier(.4,0,.2,1) forwards;}
+        @keyframes fadeUp{to{opacity:1;transform:translateY(0)}} .fade-up:nth-child(2){animation-delay:.05s;} .fade-up:nth-child(3){animation-delay:.1s;} .fade-up:nth-child(4){animation-delay:.15s;}
     </style>
 </head>
 <body>
@@ -377,10 +135,14 @@
                     <i class="fa-solid fa-wallet"></i>
                     Dashboard <span>Tabungan</span>
                 </a>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                    <span class="fb-indicator" id="fbIndicator">
+                        <span class="fb-dot off" id="fbDot"></span>
+                        <span id="fbStatusText">Firebase: belum terhubung</span>
+                    </span>
                     <span class="wa-indicator" id="waIndicator">
                         <span class="wa-dot off" id="waDot"></span>
-                        <span id="waStatusText">WA belum dikonfigurasi</span>
+                        <span id="waStatusText">WA: belum</span>
                     </span>
                     <button class="nav-btn" onclick="bukaKonfigurasi()">
                         <i class="fa-solid fa-gear"></i> <span class="d-none d-sm-inline">Konfigurasi</span>
@@ -398,36 +160,28 @@
             <div class="row g-3 mb-4">
                 <div class="col-6 col-lg-3 fade-up">
                     <div class="s-card c-saldo">
-                        <div class="d-flex align-items-start justify-content-between mb-2">
-                            <div class="s-icon i-saldo"><i class="fa-solid fa-coins"></i></div>
-                        </div>
+                        <div class="d-flex align-items-start justify-content-between mb-2"><div class="s-icon i-saldo"><i class="fa-solid fa-coins"></i></div></div>
                         <div class="s-label">Saldo Saat Ini</div>
                         <div class="s-val v-saldo" id="valSaldo">Rp 0</div>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3 fade-up">
                     <div class="s-card c-masuk">
-                        <div class="d-flex align-items-start justify-content-between mb-2">
-                            <div class="s-icon i-masuk"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                        </div>
+                        <div class="d-flex align-items-start justify-content-between mb-2"><div class="s-icon i-masuk"><i class="fa-solid fa-arrow-trend-up"></i></div></div>
                         <div class="s-label">Total Uang Masuk</div>
                         <div class="s-val v-masuk" id="valMasuk">Rp 0</div>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3 fade-up">
                     <div class="s-card c-keluar">
-                        <div class="d-flex align-items-start justify-content-between mb-2">
-                            <div class="s-icon i-keluar"><i class="fa-solid fa-arrow-trend-down"></i></div>
-                        </div>
+                        <div class="d-flex align-items-start justify-content-between mb-2"><div class="s-icon i-keluar"><i class="fa-solid fa-arrow-trend-down"></i></div></div>
                         <div class="s-label">Total Uang Keluar</div>
                         <div class="s-val v-keluar" id="valKeluar">Rp 0</div>
                     </div>
                 </div>
                 <div class="col-6 col-lg-3 fade-up">
                     <div class="s-card c-total">
-                        <div class="d-flex align-items-start justify-content-between mb-2">
-                            <div class="s-icon i-total"><i class="fa-solid fa-receipt"></i></div>
-                        </div>
+                        <div class="d-flex align-items-start justify-content-between mb-2"><div class="s-icon i-total"><i class="fa-solid fa-receipt"></i></div></div>
                         <div class="s-label">Jumlah Transaksi</div>
                         <div class="s-val v-total" id="valTotal">0</div>
                     </div>
@@ -482,7 +236,12 @@
 
             <!-- RIWAYAT -->
             <div class="sec-card">
-                <div class="sec-title"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Transaksi</div>
+                <div class="sec-title">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Transaksi
+                    <span class="sync-badge off" id="syncBadge" style="margin-left:auto;font-size:.6rem;">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Sinkron
+                    </span>
+                </div>
                 <div class="filter-row">
                     <div class="fg" style="min-width:200px;flex:2;">
                         <label class="flabel">Pencarian</label>
@@ -497,28 +256,21 @@
                         </select>
                     </div>
                     <div class="fg">
-                        <label class="flabel">Dari Tanggal</label>
+                        <label class="flabel">Dari</label>
                         <input type="date" class="finput" id="filterDari" onchange="currentPage=1;renderTabel()">
                     </div>
                     <div class="fg">
-                        <label class="flabel">Sampai Tanggal</label>
+                        <label class="flabel">Sampai</label>
                         <input type="date" class="finput" id="filterSampai" onchange="currentPage=1;renderTabel()">
                     </div>
                 </div>
                 <div class="tbl-wrap">
                     <table class="tbl" id="tblRiwayat">
-                        <thead>
-                            <tr>
-                                <th>No</th><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Saldo</th><th>Aksi</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Saldo</th><th>Aksi</th></tr></thead>
                         <tbody id="tblBody"></tbody>
                     </table>
                 </div>
-                <div class="empty" id="emptyState" style="display:none;">
-                    <i class="fa-solid fa-inbox"></i>
-                    <p>Belum ada transaksi. Mulai tambahkan transaksi pertama Anda.</p>
-                </div>
+                <div class="empty" id="emptyState" style="display:none;"><i class="fa-solid fa-inbox"></i><p>Belum ada transaksi.</p></div>
                 <div class="pag" id="pagination"></div>
                 <div class="pag-info" id="pagInfo"></div>
             </div>
@@ -535,10 +287,7 @@
                 <div class="mb-3"><label class="flabel">Nominal</label><div class="nominal-wrap"><span class="prefix">Rp</span><input type="text" class="finput" id="eNominal" required autocomplete="off"></div></div>
                 <div class="mb-3"><label class="flabel">Keterangan</label><input type="text" class="finput" id="eKeterangan" required maxlength="200"></div>
                 <div class="mb-3"><label class="flabel">Tanggal</label><input type="date" class="finput" id="eTanggal" required></div>
-                <div class="m-actions">
-                    <button type="button" class="btn-cancel" onclick="tutupModal('modalEdit')">Batal</button>
-                    <button type="submit" class="btn-upd"><i class="fa-solid fa-check"></i> Perbarui</button>
-                </div>
+                <div class="m-actions"><button type="button" class="btn-cancel" onclick="tutupModal('modalEdit')">Batal</button><button type="submit" class="btn-upd"><i class="fa-solid fa-check"></i> Perbarui</button></div>
             </form>
         </div>
     </div>
@@ -547,54 +296,81 @@
     <div class="modal-bg" id="modalHapus" style="display:none;" onclick="if(event.target===this)tutupModal('modalHapus')">
         <div class="modal-box">
             <div class="m-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i> Hapus Transaksi</div>
-            <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.6;">Apakah Anda yakin ingin menghapus transaksi <strong id="hapusInfo" style="color:var(--text-primary)"></strong>? Tindakan ini tidak dapat dibatalkan dan saldo akan dihitung ulang.</p>
+            <p style="font-size:.88rem;color:var(--text-secondary);line-height:1.6;">Yakin hapus transaksi <strong id="hapusInfo" style="color:var(--text-primary)"></strong>? Saldo akan dihitung ulang.</p>
             <input type="hidden" id="hId">
-            <div class="m-actions">
-                <button type="button" class="btn-cancel" onclick="tutupModal('modalHapus')">Batal</button>
-                <button type="button" class="btn-del" onclick="handleHapus()"><i class="fa-solid fa-trash"></i> Hapus</button>
-            </div>
+            <div class="m-actions"><button type="button" class="btn-cancel" onclick="tutupModal('modalHapus')">Batal</button><button type="button" class="btn-del" onclick="handleHapus()"><i class="fa-solid fa-trash"></i> Hapus</button></div>
         </div>
     </div>
 
     <!-- MODAL KONFIGURASI -->
     <div class="modal-bg" id="modalConfig" style="display:none;" onclick="if(event.target===this)tutupModal('modalConfig')">
         <div class="modal-box">
-            <div class="m-title"><i class="fa-brands fa-whatsapp" style="color:#25d366;font-size:1.2rem"></i> Konfigurasi WhatsApp</div>
+            <div class="m-title"><i class="fa-solid fa-gear"></i> Konfigurasi</div>
 
+            <!-- Bagian Firebase -->
+            <div style="margin-bottom:4px;">
+                <span style="font-size:.8rem;font-weight:700;color:#4caf50;"><i class="fa-solid fa-database"></i> FIREBASE (Sinkronisasi Data Multi-HP)</span>
+            </div>
             <div class="info-box">
                 <i class="fa-solid fa-circle-info"></i>
-                Dashboard ini menggunakan <strong>Fonnte</strong> sebagai penyedia API WhatsApp.
-                Daftar gratis di <a href="https://fonnte.com" target="_blank">fonnte.com</a>, hubungkan WhatsApp lewat QR, lalu salin token dari halaman <strong>Device</strong>.
+                Firebase menyimpan data di cloud sehingga bisa diakses dari <strong>HP manapun</strong>. Daftar gratis di <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>. Buat project → Realtime Database → Salin konfigurasi di sini.
             </div>
-
-            <div class="warn-box" id="cfgWarning" style="display:none;">
-                <i class="fa-solid fa-exclamation-triangle"></i>
-                <span id="cfgWarningText"></span>
-            </div>
-
-            <div class="success-box" id="cfgSuccess" style="display:none;">
-                <i class="fa-solid fa-circle-check"></i>
-                <span id="cfgSuccessText">Tes koneksi berhasil! WhatsApp siap digunakan.</span>
-            </div>
-
             <div class="mb-3">
-                <label class="flabel">API Token (dari Fonnte > Device)</label>
-                <input type="text" class="finput" id="cfgToken" placeholder="Contoh: K3cEN8oHZ7Ery5vdY8XL">
+                <label class="flabel">API Key</label>
+                <input type="text" class="finput" id="cfgFbApiKey" placeholder="AIzaSyBxxxxxxxxx">
+            </div>
+            <div class="mb-3">
+                <label class="flabel">Auth Domain</label>
+                <input type="text" class="finput" id="cfgFbAuthDomain" placeholder="nama-project.firebaseapp.com">
+            </div>
+            <div class="mb-3">
+                <label class="flabel">Database URL</label>
+                <input type="text" class="finput" id="cfgFbDbUrl" placeholder="https://nama-project-default-rtdb.asia-southeast1.firebasedatabase.app">
+            </div>
+            <div class="mb-3">
+                <label class="flabel">Project ID</label>
+                <input type="text" class="finput" id="cfgFbProjectId" placeholder="nama-project">
+            </div>
+            <div class="mb-3">
+                <label class="flabel">Storage Bucket</label>
+                <input type="text" class="finput" id="cfgFbBucket" placeholder="nama-project.appspot.com">
+            </div>
+            <div class="mb-3">
+                <label class="flabel">Messaging Sender ID</label>
+                <input type="text" class="finput" id="cfgFbSender" placeholder="123456789">
+            </div>
+            <div class="mb-3">
+                <label class="flabel">App ID</label>
+                <input type="text" class="finput" id="cfgFbAppId" placeholder="1:123456789:web:abcdef">
+            </div>
+
+            <hr class="divider">
+
+            <!-- Bagian WhatsApp -->
+            <div style="margin-bottom:4px;">
+                <span style="font-size:.8rem;font-weight:700;color:#25d366;"><i class="fa-brands fa-whatsapp"></i> WHATSAPP (Notifikasi Otomatis)</span>
+            </div>
+            <div class="info-box">
+                <i class="fa-solid fa-circle-info"></i>
+                Menggunakan <strong>Fonnte</strong>. Daftar di <a href="https://fonnte.com" target="_blank">fonnte.com</a>, buat Device, scan QR, salin token dari halaman Device.
+            </div>
+            <div class="warn-box" id="cfgWarning" style="display:none;"><i class="fa-solid fa-exclamation-triangle"></i><span id="cfgWarningText"></span></div>
+            <div class="success-box" id="cfgSuccess" style="display:none;"><i class="fa-solid fa-circle-check"></i><span id="cfgSuccessText"></span></div>
+            <div class="mb-3">
+                <label class="flabel">API Token Fonnte</label>
+                <input type="text" class="finput" id="cfgToken" placeholder="K3cEN8oHZ7Ery5vdY8XL">
             </div>
             <div class="mb-3">
                 <label class="flabel">Nomor WhatsApp Tujuan</label>
-                <input type="text" class="finput" id="cfgTarget" placeholder="Contoh: 6281912785701 (tanpa 0, tanpa +)">
+                <input type="text" class="finput" id="cfgTarget" placeholder="6281912785701">
             </div>
 
-            <div class="m-actions">
-                <button type="button" class="btn-test" id="btnTest" onclick="testKoneksi()">
-                    <i class="fa-brands fa-whatsapp"></i> Tes Koneksi
-                </button>
+            <div class="m-actions" style="flex-wrap:wrap;gap:8px;">
+                <button type="button" class="btn-test" id="btnTestWa" onclick="testKoneksiWA()"><i class="fa-brands fa-whatsapp"></i> Tes WA</button>
+                <button type="button" class="btn-test" id="btnTestFb" onclick="testKoneksiFB()" style="background:linear-gradient(135deg,#4caf50,#388e3c);"><i class="fa-solid fa-database"></i> Tes Firebase</button>
                 <div style="flex:1"></div>
                 <button type="button" class="btn-cancel" onclick="tutupModal('modalConfig')">Tutup</button>
-                <button type="button" class="btn-config-save" onclick="simpanKonfigurasi()">
-                    <i class="fa-solid fa-floppy-disk"></i> Simpan
-                </button>
+                <button type="button" class="btn-config-save" onclick="simpanKonfigurasi()"><i class="fa-solid fa-floppy-disk"></i> Simpan Semua</button>
             </div>
         </div>
     </div>
@@ -602,302 +378,264 @@
 
     <script>
     /* ============================================================
-       KONSTANTA & KONFIGURASI
+       KONSTANTA
        ============================================================ */
-    const WA_STORAGE_KEY = 'tabungan_wa_config';
-    const STORAGE_KEY = 'tabungan_data';
+    const CONFIG_KEY = 'tabungan_config_v2';
     const PER_PAGE = 8;
+    let currentPage = 1;
+    let cachedData = []; // Data transaksi dari Firebase
+    let db = null;       // Referensi Firebase Database
+    let fbApp = null;    // Referensi Firebase App
 
     /* ============================================================
-       CORS PROXY
-       Karena browser memblokir request langsung ke API Fonnte,
-       kita gunakan CORS Proxy sebagai perantara.
-       Ini HANYA untuk testing dari file HTML langsung.
+       KONFIGURASI (disimpan di localStorage)
        ============================================================ */
-    const CORS_PROXIES = [
-        'https://corsproxy.io/?',
-        'https://api.allorigins.win/raw?url=',
-    ];
+    function muatConfig() {
+        try { return JSON.parse(localStorage.getItem(CONFIG_KEY)) || {}; }
+        catch(e) { return {}; }
+    }
+    function simpanConfig(cfg) {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+    }
 
-    /** Coba kirim request lewat CORS proxy */
-    async function fetchViaProxy(url, options) {
-        let lastError = null;
-
-        for (const proxy of CORS_PROXIES) {
-            try {
-                const proxyUrl = proxy + encodeURIComponent(url);
-                const res = await fetch(proxyUrl, {
-                    ...options,
-                    headers: {
-                        ...(options.headers || {}),
-                        // Untuk corsproxy.io, Authorization tetap dikirim
-                        // Untuk allorigins, gunakan mode yang berbeda
-                    }
-                });
-                return await res.json();
-            } catch (err) {
-                lastError = err;
-                console.warn('Proxy gagal:', proxy, err.message);
-            }
-        }
-
-        // Fallback: coba langsung (mungkin di hosting yang mengizinkan CORS)
+    /* ============================================================
+       INISIALISASI FIREBASE
+       Dipanggil saat halaman load atau saat config berubah
+       ============================================================ */
+    function initFirebase(cfg) {
         try {
-            const res = await fetch(url, options);
-            return await res.json();
+            // Jika sudah ada app sebelumnya, hapus dulu
+            if (fbApp) {
+                try { fbApp.delete(); } catch(e) {}
+                fbApp = null;
+                db = null;
+            }
+
+            const firebaseConfig = {
+                apiKey: cfg.fbApiKey || '',
+                authDomain: cfg.fbAuthDomain || '',
+                databaseURL: cfg.fbDbUrl || '',
+                projectId: cfg.fbProjectId || '',
+                storageBucket: cfg.fbBucket || '',
+                messagingSenderId: cfg.fbSender || '',
+                appId: cfg.fbAppId || ''
+            };
+
+            if (!firebaseConfig.databaseURL) {
+                console.warn('Firebase: Database URL kosong');
+                updateFbIndicator(false);
+                return false;
+            }
+
+            fbApp = firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+
+            // Dengarkan perubahan data secara real-time
+            db.ref('transaksi').on('value', (snapshot) => {
+                const raw = snapshot.val();
+                if (raw) {
+                    cachedData = Object.values(raw);
+                } else {
+                    cachedData = [];
+                }
+                // Update UI
+                renderRingkasan();
+                renderTabel();
+                renderChart();
+                updateSyncBadge(true);
+                updateFbIndicator(true);
+            }, (error) => {
+                console.error('Firebase listen error:', error);
+                updateFbIndicator(false);
+                updateSyncBadge(false);
+                toast('Firebase error: ' + error.message, 'error');
+            });
+
+            return true;
         } catch (err) {
-            throw lastError || err;
+            console.error('Firebase init error:', err);
+            updateFbIndicator(false);
+            return false;
         }
     }
 
     /* ============================================================
-       DATA LAYER (localStorage)
+       DATA LAYER (Firebase Realtime Database)
        ============================================================ */
-    function getData() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-        catch(e) { return []; }
+
+    /** Tambah transaksi baru ke Firebase */
+    async function tambahKeFirebase(item) {
+        if (!db) return false;
+        try {
+            const ref = db.ref('transaksi').push();
+            item.id = ref.key; // Gunakan key Firebase sebagai ID
+            await ref.set(item);
+            return true;
+        } catch (err) {
+            console.error('Gagal simpan ke Firebase:', err);
+            toast('Gagal simpan ke cloud: ' + err.message, 'error');
+            return false;
+        }
     }
 
-    function setData(arr) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    /** Update transaksi di Firebase */
+    async function updateKeFirebase(id, data) {
+        if (!db) return false;
+        try {
+            await db.ref('transaksi/' + id).update(data);
+            return true;
+        } catch (err) {
+            console.error('Gagal update Firebase:', err);
+            toast('Gagal update: ' + err.message, 'error');
+            return false;
+        }
     }
 
-    /** Hitung ulang saldo_setelah untuk semua transaksi berdasarkan urutan tanggal */
+    /** Hapus transaksi dari Firebase */
+    async function hapusDariFirebase(id) {
+        if (!db) return false;
+        try {
+            await db.ref('transaksi/' + id).remove();
+            return true;
+        } catch (err) {
+            console.error('Gagal hapus Firebase:', err);
+            toast('Gagal hapus: ' + err.message, 'error');
+            return false;
+        }
+    }
+
+    /** Hitung ulang saldo untuk semua transaksi */
     function hitungUlangSaldo() {
-        const data = getData();
-        data.sort((a, b) => {
-            const dc = a.tanggal.localeCompare(b.tanggal);
-            return dc !== 0 ? dc : (a.id - b.id);
+        cachedData.sort((a, b) => {
+            const dc = (a.tanggal || '').localeCompare(b.tanggal || '');
+            if (dc !== 0) return dc;
+            // Urutkan berdasarkan waktu dibuat jika ada
+            return (a.created_at || '').localeCompare(b.created_at || '');
         });
         let saldo = 0;
-        data.forEach(item => {
+        cachedData.forEach(item => {
             saldo += (item.jenis === 'masuk' ? item.nominal : -item.nominal);
             item.saldo_setelah = saldo;
         });
-        setData(data);
-        return data;
+        return cachedData;
+    }
+
+    /** Update semua saldo_setelah ke Firebase sekaligus */
+    async function syncSaldoKeFirebase() {
+        if (!db) return;
+        const updates = {};
+        cachedData.forEach(item => {
+            updates['transaksi/' + item.id + '/saldo_setelah'] = item.saldo_setelah;
+        });
+        try {
+            await db.ref().update(updates);
+        } catch (err) {
+            console.error('Gagal sync saldo:', err);
+        }
     }
 
     function getSaldo() {
         const data = hitungUlangSaldo();
         return data.length > 0 ? data[data.length - 1].saldo_setelah : 0;
     }
-
-    function getTotalMasuk() {
-        return getData().filter(t => t.jenis === 'masuk').reduce((s, t) => s + t.nominal, 0);
-    }
-
-    function getTotalKeluar() {
-        return getData().filter(t => t.jenis === 'keluar').reduce((s, t) => s + t.nominal, 0);
-    }
+    function getTotalMasuk() { return cachedData.filter(t => t.jenis === 'masuk').reduce((s, t) => s + t.nominal, 0); }
+    function getTotalKeluar() { return cachedData.filter(t => t.jenis === 'keluar').reduce((s, t) => s + t.nominal, 0); }
 
     /* ============================================================
        FORMAT HELPERS
        ============================================================ */
     function formatRp(n) { return 'Rp ' + Math.abs(n).toLocaleString('id-ID'); }
-
-    function formatTgl(str) {
-        const d = new Date(str + 'T00:00:00');
-        return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
-    }
-
-    function formatNominalInput(val) {
-        let num = val.replace(/\D/g, '');
-        if (!num) return '';
-        return parseInt(num, 10).toLocaleString('id-ID');
-    }
-
-    function parseNominal(val) {
-        return parseInt(val.replace(/\D/g, ''), 10) || 0;
-    }
-
-    function sanitize(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    function esc(str) {
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
+    function formatTgl(str) { const d = new Date(str + 'T00:00:00'); return d.toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'}); }
+    function formatNominalInput(val) { let n = val.replace(/\D/g,''); return n ? parseInt(n,10).toLocaleString('id-ID') : ''; }
+    function parseNominal(val) { return parseInt(val.replace(/\D/g,''), 10) || 0; }
+    function sanitize(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+    function esc(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     /* ============================================================
        WHATSAPP API (FONNTE via CORS PROXY)
        ============================================================ */
-    function muatWaConfig() {
-        try {
-            const saved = localStorage.getItem(WA_STORAGE_KEY);
-            if (saved) return JSON.parse(saved);
-        } catch(e) {}
-        return { token: '', target: '' };
-    }
-
-    function simpanWaConfig(cfg) {
-        localStorage.setItem(WA_STORAGE_KEY, JSON.stringify(cfg));
-    }
-
-    /**
-     * Kirim notifikasi WhatsApp via Fonnte
-     * Menggunakan CORS Proxy karena browser memblokir request langsung
-     */
     async function kirimWA(tanggal, keterangan, jenis, nominal, saldo) {
-        const cfg = muatWaConfig();
-        if (!cfg.token || !cfg.target) {
-            console.warn('WhatsApp belum dikonfigurasi');
-            return false;
-        }
+        const cfg = muatConfig();
+        if (!cfg.waToken || !cfg.waTarget) return false;
 
         const emoji = jenis === 'masuk' ? '➕' : '➖';
-        const jenisText = jenis === 'masuk' ? 'Uang Masuk' : 'Uang Keluar';
-        const pesan = `💰 UPDATE TABUNGAN\n\n📅 Tanggal:\n${formatTgl(tanggal)}\n\n📝 Keterangan:\n${keterangan}\n\n${emoji} ${jenisText}:\n${formatRp(nominal)}\n\n💵 Saldo Saat Ini:\n${formatRp(saldo)}\n\nTerima kasih.`;
+        const jText = jenis === 'masuk' ? 'Uang Masuk' : 'Uang Keluar';
+        const pesan = `💰 UPDATE TABUNGAN\n\n📅 Tanggal:\n${formatTgl(tanggal)}\n\n📝 Keterangan:\n${keterangan}\n\n${emoji} ${jText}:\n${formatRp(nominal)}\n\n💵 Saldo Saat Ini:\n${formatRp(saldo)}\n\nTerima kasih.`;
 
-        try {
-            // Kirim lewat CORS Proxy ke API Fonnte
-            const fonnteUrl = 'https://api.fonnte.com/send';
-            const result = await fetchViaProxy(fonnteUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': cfg.token,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    target: cfg.target,
-                    message: pesan
-                })
-            });
+        const proxies = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+        let lastErr = null;
 
-            console.log('Response Fonnte:', result);
-
-            // Cek apakah berhasil
-            if (result && (result.status === true || result.status === 'success')) {
-                return true;
-            } else {
-                // Tampilkan error detail dari Fonnte
-                const errMsg = result?.reason || result?.message || 'Unknown error';
-                console.error('Fonnte error:', errMsg);
-                toast('WA gagal: ' + errMsg, 'warning');
+        for (const proxy of proxies) {
+            try {
+                const res = await fetch(proxy + encodeURIComponent('https://api.fonnte.com/send'), {
+                    method: 'POST',
+                    headers: { 'Authorization': cfg.waToken, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target: cfg.waTarget, message: pesan })
+                });
+                const json = await res.json();
+                console.log('WA response:', json);
+                if (json.status === true) return true;
+                toast('WA gagal: ' + (json.reason || 'Unknown'), 'warning');
                 return false;
-            }
-        } catch (err) {
-            console.error('Gagal kirim WhatsApp:', err);
-            toast('WA gagal: ' + err.message, 'warning');
-            return false;
+            } catch (err) { lastErr = err; }
         }
-    }
-
-    /**
-     * Tes koneksi ke Fonnte
-     * Dipanggil dari modal konfigurasi
-     */
-    async function testKoneksi() {
-        const token = document.getElementById('cfgToken').value.trim();
-        const target = document.getElementById('cfgTarget').value.trim();
-        const btnTest = document.getElementById('btnTest');
-        const warnBox = document.getElementById('cfgWarning');
-        const successBox = document.getElementById('cfgSuccess');
-
-        // Sembunyikan status sebelumnya
-        warnBox.style.display = 'none';
-        successBox.style.display = 'none';
-
-        // Validasi
-        if (!token) {
-            warnBox.style.display = 'block';
-            document.getElementById('cfgWarningText').textContent = 'API Token masih kosong. Silakan salin token dari halaman Device di Fonnte.';
-            return;
-        }
-        if (!target) {
-            warnBox.style.display = 'block';
-            document.getElementById('cfgWarningText').textContent = 'Nomor WhatsApp tujuan masih kosong. Format: 628xxx (tanpa 0, tanpa +).';
-            return;
-        }
-        if (!target.startsWith('62')) {
-            warnBox.style.display = 'block';
-            document.getElementById('cfgWarningText').textContent = 'Nomor harus diawali 62 (contoh: 6281912785701). Jangan gunakan 0 atau + di depan.';
-            return;
-        }
-
-        // Loading
-        btnTest.disabled = true;
-        btnTest.innerHTML = '<span class="spinner"></span> Menguji...';
-
+        // Fallback langsung
         try {
-            const pesanTest = '🧪 TES KONEKSI\n\nDashboard Tabungan berhasil terhubung ke WhatsApp Anda.\n\nWaktu: ' + new Date().toLocaleString('id-ID');
-
-            const fonnteUrl = 'https://api.fonnte.com/send';
-            const result = await fetchViaProxy(fonnteUrl, {
+            const res = await fetch('https://api.fonnte.com/send', {
                 method: 'POST',
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    target: target,
-                    message: pesanTest
-                })
+                headers: { 'Authorization': cfg.waToken, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target: cfg.waTarget, message: pesan })
             });
-
-            console.log('Test response:', result);
-
-            if (result && (result.status === true || result.status === 'success')) {
-                successBox.style.display = 'block';
-                document.getElementById('cfgSuccessText').textContent = 'Tes koneksi berhasil! Cek WhatsApp Anda, seharusnya ada pesan tes baru.';
-            } else {
-                warnBox.style.display = 'block';
-                const reason = result?.reason || result?.message || JSON.stringify(result) || 'Tidak diketahui';
-                document.getElementById('cfgWarningText').textContent = 'Gagal: ' + reason;
-
-                // Berikan saran berdasarkan error
-                if (reason.includes('device') || reason.includes('disconnect')) {
-                    document.getElementById('cfgWarningText').textContent += ' — Silakan buka Fonnte > Device, pastikan status Terhubung. Scan ulang QR jika perlu.';
-                } else if (reason.includes('credit') || reason.includes('quota') || reason.includes('limit')) {
-                    document.getElementById('cfgWarningText').textContent += ' — Kredit/paket pesan habis. Silakan top up di Fonnte.';
-                } else if (reason.includes('target') || reason.includes('number')) {
-                    document.getElementById('cfgWarningText').textContent += ' — Periksa kembali nomor tujuan. Pastikan formatnya 628xxx tanpa spasi atau tanda baca.';
-                }
-            }
+            const json = await res.json();
+            return json.status === true;
         } catch (err) {
-            warnBox.style.display = 'block';
-            document.getElementById('cfgWarningText').innerHTML =
-                'Tidak bisa terhubung ke Fonnte. Error: ' + esc(err.message) +
-                '<br><br><strong>Kemungkinan penyebab:</strong>' +
-                '<br>1. CORS Proxy sedang down — coba lagi beberapa saat' +
-                '<br>2. Koneksi internet bermasalah' +
-                '<br>3. Token tidak valid — cek kembali di Fonnte > Device' +
-                '<br><br><strong>Solusi permanen:</strong> Upload file ini ke hosting PHP dan gunakan file <code>wa_send.php</code> sebagai proxy (panduan ada di bawah script).';
-        } finally {
-            btnTest.disabled = false;
-            btnTest.innerHTML = '<i class="fa-brands fa-whatsapp"></i> Tes Koneksi';
+            console.error('WA error:', err);
+            return false;
         }
     }
 
     /* ============================================================
-       TOAST NOTIFICATION
+       TOAST
        ============================================================ */
     function toast(msg, type = 'success') {
         const wrap = document.getElementById('toastWrap');
         const el = document.createElement('div');
-        const cls = type === 'success' ? 'ts' : type === 'error' ? 'te' : type === 'warning' ? 'tw' : 'ti';
-        const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+        const cls = type==='success'?'ts':type==='error'?'te':type==='warning'?'tw':'ti';
+        const icon = type==='success'?'fa-circle-check':type==='error'?'fa-circle-xmark':type==='warning'?'fa-triangle-exclamation':'fa-circle-info';
         el.className = `tst ${cls}`;
         el.innerHTML = `<i class="fa-solid ${icon} tst-icon"></i><span class="tst-msg">${esc(msg)}</span>`;
         wrap.appendChild(el);
-        setTimeout(() => {
-            el.classList.add('out');
-            setTimeout(() => el.remove(), 300);
-        }, 5000);
+        setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 5000);
     }
 
     /* ============================================================
-       MODAL HELPERS
+       MODAL
        ============================================================ */
-    function bukaModal(id) {
-        document.getElementById(id).style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+    function bukaModal(id) { document.getElementById(id).style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function tutupModal(id) { document.getElementById(id).style.display = 'none'; document.body.style.overflow = ''; }
+
+    /* ============================================================
+       INDICATOR
+       ============================================================ */
+    function updateFbIndicator(connected) {
+        const dot = document.getElementById('fbDot');
+        const txt = document.getElementById('fbStatusText');
+        dot.className = 'fb-dot ' + (connected ? 'on' : 'off');
+        txt.textContent = 'Firebase: ' + (connected ? 'terhubung' : 'tidak terhubung');
     }
-    function tutupModal(id) {
-        document.getElementById(id).style.display = 'none';
-        document.body.style.overflow = '';
+    function updateWaIndicator() {
+        const cfg = muatConfig();
+        const dot = document.getElementById('waDot');
+        const txt = document.getElementById('waStatusText');
+        dot.className = 'wa-dot ' + (cfg.waToken && cfg.waTarget ? 'on' : 'off');
+        txt.textContent = 'WA: ' + (cfg.waToken && cfg.waTarget ? 'siap' : 'belum');
+    }
+    function updateSyncBadge(ok) {
+        const b = document.getElementById('syncBadge');
+        b.className = 'sync-badge' + (ok ? '' : ' off');
+        b.innerHTML = ok
+            ? '<i class="fa-solid fa-cloud-check"></i> Tersinkron'
+            : '<i class="fa-solid fa-cloud-arrow-down"></i> Sinkron';
     }
 
     /* ============================================================
@@ -907,32 +645,35 @@
         document.getElementById('valSaldo').textContent = formatRp(getSaldo());
         document.getElementById('valMasuk').textContent = formatRp(getTotalMasuk());
         document.getElementById('valKeluar').textContent = formatRp(getTotalKeluar());
-        document.getElementById('valTotal').textContent = getData().length.toLocaleString('id-ID');
+        document.getElementById('valTotal').textContent = cachedData.length.toLocaleString('id-ID');
     }
 
     /* ============================================================
        RENDER: Tabel
        ============================================================ */
-    let currentPage = 1;
-
     function renderTabel() {
-        const data = hitungUlangSaldo();
+        hitungUlangSaldo();
         const search = document.getElementById('filterSearch').value.toLowerCase().trim();
         const jenis = document.getElementById('filterJenis').value;
         const dari = document.getElementById('filterDari').value;
         const sampai = document.getElementById('filterSampai').value;
 
-        let filtered = data.filter(t => {
-            if (search && !t.keterangan.toLowerCase().includes(search)) return false;
+        let filtered = cachedData.filter(t => {
+            if (search && !(t.keterangan || '').toLowerCase().includes(search)) return false;
             if (jenis && t.jenis !== jenis) return false;
-            if (dari && t.tanggal < dari) return false;
-            if (sampai && t.tanggal > sampai) return false;
+            if (dari && (t.tanggal || '') < dari) return false;
+            if (sampai && (t.tanggal || '') > sampai) return false;
             return true;
         });
 
-        filtered.reverse();
-        const totalFiltered = filtered.length;
-        const totalPages = Math.max(1, Math.ceil(totalFiltered / PER_PAGE));
+        // Urutkan terbaru di atas
+        filtered.sort((a, b) => {
+            const dc = (b.tanggal || '').localeCompare(a.tanggal || '');
+            return dc !== 0 ? dc : (b.created_at || '').localeCompare(a.created_at || '');
+        });
+
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
         if (currentPage > totalPages) currentPage = totalPages;
         if (currentPage < 1) currentPage = 1;
 
@@ -943,7 +684,7 @@
         const emptyEl = document.getElementById('emptyState');
         const tblEl = document.getElementById('tblRiwayat');
 
-        if (totalFiltered === 0) { tblEl.style.display = 'none'; emptyEl.style.display = 'block'; }
+        if (total === 0) { tblEl.style.display = 'none'; emptyEl.style.display = 'block'; }
         else { tblEl.style.display = ''; emptyEl.style.display = 'none'; }
 
         let html = '';
@@ -958,113 +699,62 @@
                 <td>${badge}</td>
                 <td>${esc(t.keterangan)}</td>
                 <td style="${nc};font-weight:600;white-space:nowrap;">${pf} ${formatRp(t.nominal)}</td>
-                <td style="color:var(--cyan);font-weight:600;white-space:nowrap;">${formatRp(t.saldo_setelah)}</td>
+                <td style="color:var(--cyan);font-weight:600;white-space:nowrap;">${formatRp(t.saldo_setelah || 0)}</td>
                 <td style="white-space:nowrap;">
-                    <button class="btn-act" title="Edit" onclick="bukaEdit(${t.id})"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn-act del" title="Hapus" onclick="bukaHapus(${t.id})" style="margin-left:4px;"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn-act" title="Edit" onclick="bukaEdit('${esc(t.id)}')"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn-act del" title="Hapus" onclick="bukaHapus('${esc(t.id)}')" style="margin-left:4px;"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>`;
         });
         tbody.innerHTML = html;
-        renderPagination(totalPages, totalFiltered);
+        renderPagination(totalPages, total);
     }
 
     function renderPagination(totalPages, totalItems) {
         const pag = document.getElementById('pagination');
         const info = document.getElementById('pagInfo');
-        if (totalPages <= 1) {
-            pag.innerHTML = '';
-            info.textContent = totalItems > 0 ? `Menampilkan ${totalItems} transaksi` : '';
-            return;
-        }
-        let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}><i class="fa-solid fa-chevron-left" style="font-size:0.7rem"></i></button>`;
+        if (totalPages <= 1) { pag.innerHTML = ''; info.textContent = totalItems > 0 ? `Menampilkan ${totalItems} transaksi` : ''; return; }
+        let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}><i class="fa-solid fa-chevron-left" style="font-size:.7rem"></i></button>`;
         const pages = [];
         if (totalPages <= 7) { for (let i=1;i<=totalPages;i++) pages.push(i); }
-        else {
-            pages.push(1);
-            if (currentPage > 3) pages.push('...');
-            for (let i=Math.max(2,currentPage-1);i<=Math.min(totalPages-1,currentPage+1);i++) pages.push(i);
-            if (currentPage < totalPages-2) pages.push('...');
-            pages.push(totalPages);
-        }
-        pages.forEach(p => {
-            if (p === '...') html += `<span style="color:var(--text-muted);display:flex;align-items:center;padding:0 4px;">...</span>`;
-            else html += `<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
-        });
-        html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}><i class="fa-solid fa-chevron-right" style="font-size:0.7rem"></i></button>`;
+        else { pages.push(1); if (currentPage>3) pages.push('...'); for (let i=Math.max(2,currentPage-1);i<=Math.min(totalPages-1,currentPage+1);i++) pages.push(i); if (currentPage<totalPages-2) pages.push('...'); pages.push(totalPages); }
+        pages.forEach(p => { if (p==='...') html += `<span style="color:var(--text-muted);display:flex;align-items:center;padding:0 4px;">...</span>`; else html += `<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`; });
+        html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}><i class="fa-solid fa-chevron-right" style="font-size:.7rem"></i></button>`;
         pag.innerHTML = html;
-        const s = (currentPage-1)*PER_PAGE+1, e = Math.min(currentPage*PER_PAGE, totalItems);
-        info.textContent = `Menampilkan ${s}-${e} dari ${totalItems} transaksi`;
+        info.textContent = `Menampilkan ${(currentPage-1)*PER_PAGE+1}-${Math.min(currentPage*PER_PAGE,totalItems)} dari ${totalItems}`;
     }
-
     function goPage(p) { currentPage = p; renderTabel(); }
 
     /* ============================================================
        RENDER: Chart
        ============================================================ */
     let chartBar = null, chartDoughnut = null;
-
     function renderChart() {
         const data = hitungUlangSaldo();
-        const bulanLabels = [], bulanMasuk = [], bulanKeluar = [];
+        const bl=[], bm=[], bk=[];
         const now = new Date();
         for (let i=5;i>=0;i--) {
             const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-            const prefix = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-            bulanLabels.push(d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}));
-            bulanMasuk.push(data.filter(t=>t.tanggal.startsWith(prefix)&&t.jenis==='masuk').reduce((s,t)=>s+t.nominal,0));
-            bulanKeluar.push(data.filter(t=>t.tanggal.startsWith(prefix)&&t.jenis==='keluar').reduce((s,t)=>s+t.nominal,0));
+            const pfx = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+            bl.push(d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}));
+            bm.push(data.filter(t=>(t.tanggal||'').startsWith(pfx)&&t.jenis==='masuk').reduce((s,t)=>s+t.nominal,0));
+            bk.push(data.filter(t=>(t.tanggal||'').startsWith(pfx)&&t.jenis==='keluar').reduce((s,t)=>s+t.nominal,0));
         }
-        const totalM = getTotalMasuk(), totalK = getTotalKeluar();
-        const hasData = totalM > 0 || totalK > 0;
-
+        const tM=getTotalMasuk(), tK=getTotalKeluar(), hasD=tM>0||tK>0;
         if (chartBar) chartBar.destroy();
         if (chartDoughnut) chartDoughnut.destroy();
-
         chartBar = new Chart(document.getElementById('chartBar').getContext('2d'), {
             type:'bar',
-            data:{
-                labels:bulanLabels,
-                datasets:[
-                    { label:'Pemasukan', data:bulanMasuk, backgroundColor:'rgba(16,185,129,0.85)', borderRadius:6, borderSkipped:false, barPercentage:0.7, categoryPercentage:0.6 },
-                    { label:'Pengeluaran', data:bulanKeluar, backgroundColor:'rgba(244,63,94,0.85)', borderRadius:6, borderSkipped:false, barPercentage:0.7, categoryPercentage:0.6 }
-                ]
-            },
-            options:{
-                responsive:true, maintainAspectRatio:false,
-                plugins:{
-                    legend:{ labels:{ color:'#8b9ab5', font:{family:'Poppins',size:11}, padding:12, usePointStyle:true, pointStyleWidth:8 }},
-                    tooltip:{ backgroundColor:'rgba(12,19,34,0.95)', titleColor:'#eef2f7', bodyColor:'#8b9ab5', borderColor:'rgba(255,255,255,0.08)', borderWidth:1, padding:12, cornerRadius:10, titleFont:{family:'Poppins',weight:'600'}, bodyFont:{family:'Poppins'},
-                        callbacks:{ label:ctx=>ctx.dataset.label+': '+formatRp(ctx.parsed.y) }
-                    }
-                },
-                scales:{
-                    x:{ ticks:{color:'#546380',font:{family:'Poppins',size:10}}, grid:{color:'rgba(255,255,255,0.03)'}, border:{color:'rgba(255,255,255,0.06)'} },
-                    y:{ ticks:{color:'#546380',font:{family:'Poppins',size:10}, callback:v=>v>=1e6?(v/1e6).toFixed(1)+'jt':v>=1e3?(v/1e3).toFixed(0)+'rb':v}, grid:{color:'rgba(255,255,255,0.03)'}, border:{color:'rgba(255,255,255,0.06)'} }
-                }
-            }
+            data:{labels:bl,datasets:[
+                {label:'Pemasukan',data:bm,backgroundColor:'rgba(16,185,129,0.85)',borderRadius:6,borderSkipped:false,barPercentage:0.7,categoryPercentage:0.6},
+                {label:'Pengeluaran',data:bk,backgroundColor:'rgba(244,63,94,0.85)',borderRadius:6,borderSkipped:false,barPercentage:0.7,categoryPercentage:0.6}
+            ]},
+            options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b9ab5',font:{family:'Poppins',size:11},padding:12,usePointStyle:true,pointStyleWidth:8}},tooltip:{backgroundColor:'rgba(12,19,34,0.95)',titleColor:'#eef2f7',bodyColor:'#8b9ab5',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,padding:12,cornerRadius:10,titleFont:{family:'Poppins',weight:'600'},bodyFont:{family:'Poppins'},callbacks:{label:c=>c.dataset.label+': '+formatRp(c.parsed.y)}}},scales:{x:{ticks:{color:'#546380',font:{family:'Poppins',size:10}},grid:{color:'rgba(255,255,255,0.03)'},border:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#546380',font:{family:'Poppins',size:10},callback:v=>v>=1e6?(v/1e6).toFixed(1)+'jt':v>=1e3?(v/1e3).toFixed(0)+'rb':v},grid:{color:'rgba(255,255,255,0.03)'},border:{color:'rgba(255,255,255,0.06)'}}}}
         });
-
         chartDoughnut = new Chart(document.getElementById('chartDoughnut').getContext('2d'), {
             type:'doughnut',
-            data:{
-                labels:hasData?['Pemasukan','Pengeluaran']:['Belum ada data'],
-                datasets:[{
-                    data:hasData?[totalM,totalK]:[1],
-                    backgroundColor:hasData?['rgba(16,185,129,0.85)','rgba(244,63,94,0.85)']:['rgba(255,255,255,0.05)'],
-                    borderColor:hasData?['rgba(16,185,129,0.3)','rgba(244,63,94,0.3)']:['rgba(255,255,255,0.08)'],
-                    borderWidth:2, hoverOffset:8
-                }]
-            },
-            options:{
-                responsive:true, maintainAspectRatio:false, cutout:'68%',
-                plugins:{
-                    legend:{ position:'bottom', labels:{color:'#8b9ab5',font:{family:'Poppins',size:11},padding:14,usePointStyle:true,pointStyleWidth:8}},
-                    tooltip:{ backgroundColor:'rgba(12,19,34,0.95)', titleColor:'#eef2f7', bodyColor:'#8b9ab5', borderColor:'rgba(255,255,255,0.08)', borderWidth:1, padding:12, cornerRadius:10,
-                        callbacks:{ label:ctx=>hasData?ctx.label+': '+formatRp(ctx.parsed):'Belum ada data' }
-                    }
-                }
-            }
+            data:{labels:hasD?['Pemasukan','Pengeluaran']:['Belum ada data'],datasets:[{data:hasD?[tM,tK]:[1],backgroundColor:hasD?['rgba(16,185,129,0.85)','rgba(244,63,94,0.85)']:['rgba(255,255,255,0.05)'],borderColor:hasD?['rgba(16,185,129,0.3)','rgba(244,63,94,0.3)']:['rgba(255,255,255,0.08)'],borderWidth:2,hoverOffset:8}]},
+            options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#8b9ab5',font:{family:'Poppins',size:11},padding:14,usePointStyle:true,pointStyleWidth:8}},tooltip:{backgroundColor:'rgba(12,19,34,0.95)',titleColor:'#eef2f7',bodyColor:'#8b9ab5',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,padding:12,cornerRadius:10,callbacks:{label:c=>hasD?c.label+': '+formatRp(c.parsed):'Belum ada data'}}}}
         });
     }
 
@@ -1095,35 +785,38 @@
 
         try {
             const saldoSetelah = jenis === 'masuk' ? saldoSekarang + nominalRaw : saldoSekarang - nominalRaw;
-            const data = getData();
-            data.push({
-                id: Date.now(),
+
+            const item = {
                 tanggal, jenis,
                 nominal: nominalRaw,
                 keterangan: sanitize(keterangan),
                 saldo_setelah: saldoSetelah,
                 created_at: new Date().toISOString()
-            });
-            setData(data);
+            };
 
-            renderRingkasan();
-            renderTabel();
-            renderChart();
+            // Simpan ke Firebase
+            const ok = await tambahKeFirebase(item);
 
-            // Kirim WhatsApp (async, tidak memblokir)
-            const cfg = muatWaConfig();
-            if (cfg.token && cfg.target) {
-                const waOk = await kirimWA(tanggal, keterangan, jenis, nominalRaw, saldoSetelah);
-                if (waOk) toast('Transaksi disimpan + WhatsApp terkirim!', 'success');
-                else toast('Transaksi disimpan, tapi WhatsApp gagal terkirim.', 'warning');
-            } else {
-                toast('Transaksi berhasil disimpan!', 'success');
+            if (ok) {
+                // Setelah tersimpan, hitung ulang semua saldo dan sync ke Firebase
+                // (Firebase listener akan otomatis update UI)
+                hitungUlangSaldo();
+                await syncSaldoKeFirebase();
+
+                // Kirim WhatsApp
+                const cfg = muatConfig();
+                if (cfg.waToken && cfg.waTarget) {
+                    const waOk = await kirimWA(tanggal, keterangan, jenis, nominalRaw, saldoSetelah);
+                    if (waOk) toast('Tersimpan + WhatsApp terkirim!', 'success');
+                    else toast('Tersimpan, WA gagal.', 'warning');
+                } else {
+                    toast('Transaksi tersimpan di cloud!', 'success');
+                }
+                document.getElementById('formTransaksi').reset();
+                setTanggalHariIni();
             }
-
-            document.getElementById('formTransaksi').reset();
-            setTanggalHariIni();
         } catch (err) {
-            toast('Gagal menyimpan transaksi.', 'error');
+            toast('Gagal menyimpan.', 'error');
             console.error(err);
         } finally {
             btn.disabled = false;
@@ -1136,7 +829,7 @@
        CRUD: EDIT
        ============================================================ */
     function bukaEdit(id) {
-        const item = getData().find(t => t.id === id);
+        const item = cachedData.find(t => t.id === id);
         if (!item) return;
         document.getElementById('eId').value = id;
         document.getElementById('eJenis').value = item.jenis;
@@ -1146,31 +839,28 @@
         bukaModal('modalEdit');
     }
 
-    function handleEdit(e) {
+    async function handleEdit(e) {
         e.preventDefault();
-        const id = parseInt(document.getElementById('eId').value);
+        const id = document.getElementById('eId').value;
         const jenis = document.getElementById('eJenis').value;
         const nominalRaw = parseNominal(document.getElementById('eNominal').value);
         const keterangan = document.getElementById('eKeterangan').value.trim();
         const tanggal = document.getElementById('eTanggal').value;
 
-        if (nominalRaw <= 0) { toast('Nominal harus lebih dari 0.','error'); return false; }
-        if (!keterangan) { toast('Keterangan tidak boleh kosong.','error'); return false; }
+        if (nominalRaw <= 0) { toast('Nominal harus > 0.','error'); return false; }
+        if (!keterangan) { toast('Keterangan wajib.','error'); return false; }
 
-        const data = getData();
-        const idx = data.findIndex(t => t.id === id);
-        if (idx === -1) { toast('Transaksi tidak ditemukan.','error'); return false; }
+        const ok = await updateKeFirebase(id, {
+            jenis, nominal: nominalRaw,
+            keterangan: sanitize(keterangan), tanggal
+        });
 
-        data[idx].jenis = jenis;
-        data[idx].nominal = nominalRaw;
-        data[idx].keterangan = sanitize(keterangan);
-        data[idx].tanggal = tanggal;
-        setData(data);
-        hitungUlangSaldo();
-
-        renderRingkasan(); renderTabel(); renderChart();
-        tutupModal('modalEdit');
-        toast('Transaksi berhasil diperbarui!', 'success');
+        if (ok) {
+            hitungUlangSaldo();
+            await syncSaldoKeFirebase();
+            tutupModal('modalEdit');
+            toast('Transaksi diperbarui!', 'success');
+        }
         return false;
     }
 
@@ -1178,60 +868,153 @@
        CRUD: HAPUS
        ============================================================ */
     function bukaHapus(id) {
-        const item = getData().find(t => t.id === id);
+        const item = cachedData.find(t => t.id === id);
         if (!item) return;
         document.getElementById('hId').value = id;
         document.getElementById('hapusInfo').textContent = `"${item.keterangan}" (${formatRp(item.nominal)})`;
         bukaModal('modalHapus');
     }
 
-    function handleHapus() {
-        const id = parseInt(document.getElementById('hId').value);
-        setData(getData().filter(t => t.id !== id));
-        hitungUlangSaldo();
-        renderRingkasan(); renderTabel(); renderChart();
-        tutupModal('modalHapus');
-        toast('Transaksi berhasil dihapus.', 'success');
+    async function handleHapus() {
+        const id = document.getElementById('hId').value;
+        const ok = await hapusDariFirebase(id);
+        if (ok) {
+            hitungUlangSaldo();
+            await syncSaldoKeFirebase();
+            tutupModal('modalHapus');
+            toast('Transaksi dihapus.', 'success');
+        }
     }
 
     /* ============================================================
        KONFIGURASI
        ============================================================ */
     function bukaKonfigurasi() {
-        const cfg = muatWaConfig();
-        document.getElementById('cfgToken').value = cfg.token || '';
-        document.getElementById('cfgTarget').value = cfg.target || '';
+        const cfg = muatConfig();
+        document.getElementById('cfgFbApiKey').value = cfg.fbApiKey || '';
+        document.getElementById('cfgFbAuthDomain').value = cfg.fbAuthDomain || '';
+        document.getElementById('cfgFbDbUrl').value = cfg.fbDbUrl || '';
+        document.getElementById('cfgFbProjectId').value = cfg.fbProjectId || '';
+        document.getElementById('cfgFbBucket').value = cfg.fbBucket || '';
+        document.getElementById('cfgFbSender').value = cfg.fbSender || '';
+        document.getElementById('cfgFbAppId').value = cfg.fbAppId || '';
+        document.getElementById('cfgToken').value = cfg.waToken || '';
+        document.getElementById('cfgTarget').value = cfg.waTarget || '';
         document.getElementById('cfgWarning').style.display = 'none';
         document.getElementById('cfgSuccess').style.display = 'none';
         bukaModal('modalConfig');
     }
 
     function simpanKonfigurasi() {
+        const cfg = {
+            fbApiKey: document.getElementById('cfgFbApiKey').value.trim(),
+            fbAuthDomain: document.getElementById('cfgFbAuthDomain').value.trim(),
+            fbDbUrl: document.getElementById('cfgFbDbUrl').value.trim(),
+            fbProjectId: document.getElementById('cfgFbProjectId').value.trim(),
+            fbBucket: document.getElementById('cfgFbBucket').value.trim(),
+            fbSender: document.getElementById('cfgFbSender').value.trim(),
+            fbAppId: document.getElementById('cfgFbAppId').value.trim(),
+            waToken: document.getElementById('cfgToken').value.trim(),
+            waTarget: document.getElementById('cfgTarget').value.trim()
+        };
+        simpanConfig(cfg);
+        updateWaIndicator();
+
+        // Re-init Firebase dengan config baru
+        if (cfg.fbDbUrl) {
+            initFirebase(cfg);
+            toast('Konfigurasi tersimpan. Firebase terhubung!', 'success');
+        } else {
+            toast('Konfigurasi tersimpan. Firebase belum dikonfigurasi.', 'warning');
+        }
+
+        tutupModal('modalConfig');
+    }
+
+    /** Tes koneksi WhatsApp */
+    async function testKoneksiWA() {
         const token = document.getElementById('cfgToken').value.trim();
         const target = document.getElementById('cfgTarget').value.trim();
+        const warn = document.getElementById('cfgWarning');
+        const succ = document.getElementById('cfgSuccess');
+        warn.style.display = 'none'; succ.style.display = 'none';
 
-        if (!token || !target) {
-            toast('Token dan nomor WhatsApp wajib diisi.', 'error');
+        if (!token || !target) { warn.style.display='block'; document.getElementById('cfgWarningText').textContent='Token dan nomor wajib diisi.'; return; }
+
+        const btn = document.getElementById('btnTestWa');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menguji...';
+
+        const pesan = '🧪 TES KONEKSI\n\nDashboard Tabungan terhubung!\nWaktu: ' + new Date().toLocaleString('id-ID');
+        const proxies = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+        let berhasil = false;
+
+        for (const px of proxies) {
+            try {
+                const r = await fetch(px + encodeURIComponent('https://api.fonnte.com/send'), {
+                    method:'POST', headers:{'Authorization':token,'Content-Type':'application/json'},
+                    body: JSON.stringify({target,message:pesan})
+                });
+                const j = await r.json();
+                if (j.status === true) { berhasil = true; break; }
+            } catch(e) {}
+        }
+
+        if (!berhasil) {
+            try {
+                const r = await fetch('https://api.fonnte.com/send', {
+                    method:'POST', headers:{'Authorization':token,'Content-Type':'application/json'},
+                    body: JSON.stringify({target,message:pesan})
+                });
+                const j = await r.json();
+                if (j.status === true) berhasil = true;
+            } catch(e) {}
+        }
+
+        if (berhasil) {
+            succ.style.display = 'block';
+            document.getElementById('cfgSuccessText').textContent = 'Tes WA berhasil! Cek WhatsApp Anda.';
+        } else {
+            warn.style.display = 'block';
+            document.getElementById('cfgWarningText').textContent = 'Tes WA gagal. Cek token, nomor, dan status device di Fonnte.';
+        }
+
+        btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> Tes WA';
+    }
+
+    /** Tes koneksi Firebase */
+    async function testKoneksiFB() {
+        const dbUrl = document.getElementById('cfgFbDbUrl').value.trim();
+        const apiKey = document.getElementById('cfgFbApiKey').value.trim();
+        const warn = document.getElementById('cfgWarning');
+        const succ = document.getElementById('cfgSuccess');
+        warn.style.display = 'none'; succ.style.display = 'none';
+
+        if (!dbUrl || !apiKey) {
+            warn.style.display = 'block';
+            document.getElementById('cfgWarningText').textContent = 'Database URL dan API Key wajib diisi.';
             return;
         }
 
-        simpanWaConfig({ token, target });
-        updateWaIndicator();
-        tutupModal('modalConfig');
-        toast('Konfigurasi WhatsApp berhasil disimpan.', 'success');
-    }
+        const btn = document.getElementById('btnTestFb');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menguji...';
 
-    function updateWaIndicator() {
-        const cfg = muatWaConfig();
-        const dot = document.getElementById('waDot');
-        const txt = document.getElementById('waStatusText');
-        if (cfg.token && cfg.target) {
-            dot.className = 'wa-dot on';
-            txt.textContent = 'FONNTE terhubung';
-        } else {
-            dot.className = 'wa-dot off';
-            txt.textContent = 'WA belum dikonfigurasi';
+        try {
+            // Coba baca data dari Firebase
+            const testUrl = dbUrl.replace(/\/$/, '') + '/transaksi.json?limitToFirst=1';
+            const res = await fetch(testUrl);
+            if (res.ok) {
+                succ.style.display = 'block';
+                document.getElementById('cfgSuccessText').textContent = 'Firebase terhubung! Data bisa diakses dari semua HP.';
+            } else {
+                warn.style.display = 'block';
+                document.getElementById('cfgWarningText').textContent = 'Gagal akses Firebase (HTTP ' + res.status + '). Pastikan Database URL benar dan Rules sudah diatur ke read/write: true.';
+            }
+        } catch (err) {
+            warn.style.display = 'block';
+            document.getElementById('cfgWarningText').textContent = 'Gagal: ' + err.message + '. Cek koneksi internet dan Database URL.';
         }
+
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-database"></i> Tes Firebase';
     }
 
     /* ============================================================
@@ -1239,12 +1022,11 @@
        ============================================================ */
     function buatPartikel() {
         const c = document.getElementById('particles');
-        for (let i=0;i<25;i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
+        for (let i=0;i<20;i++) {
+            const p = document.createElement('div'); p.className = 'particle';
             const s = Math.random()*3+1;
-            const colors = ['rgba(16,185,129,0.25)','rgba(6,182,212,0.2)','rgba(245,158,11,0.15)'];
-            const col = colors[Math.floor(Math.random()*colors.length)];
+            const cols = ['rgba(16,185,129,0.25)','rgba(6,182,212,0.2)','rgba(245,158,11,0.15)'];
+            const col = cols[Math.floor(Math.random()*cols.length)];
             p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;background:${col};animation-duration:${Math.random()*15+15}s;animation-delay:${Math.random()*20}s;box-shadow:0 0 ${s*3}px ${col};`;
             c.appendChild(p);
         }
@@ -1259,21 +1041,19 @@
                 const pos = this.selectionStart;
                 const old = this.value.length;
                 this.value = formatNominalInput(this.value);
-                this.setSelectionRange(pos+(this.value.length-old), pos+(this.value.length-old));
+                const diff = this.value.length - old;
+                this.setSelectionRange(pos + diff, pos + diff);
             });
         });
     }
 
-    /* ============================================================
-       TANGGAL HARI INI
-       ============================================================ */
     function setTanggalHariIni() {
         const d = new Date();
         document.getElementById('fTanggal').value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     }
 
     /* ============================================================
-       KEYBOARD: Escape tutup modal
+       KEYBOARD
        ============================================================ */
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
@@ -1284,181 +1064,28 @@
     });
 
     /* ============================================================
-       INISIALISASI
+       INISIALISASI UTAMA
        ============================================================ */
     document.addEventListener('DOMContentLoaded', function() {
         buatPartikel();
         setTanggalHariIni();
         setupNominalFormatting();
         updateWaIndicator();
-        renderRingkasan();
-        renderTabel();
-        renderChart();
+
+        // Muat konfigurasi dan inisialisasi Firebase
+        const cfg = muatConfig();
+        if (cfg.fbDbUrl && cfg.fbApiKey) {
+            initFirebase(cfg);
+        } else {
+            updateFbIndicator(false);
+            updateSyncBadge(false);
+            // Tampilkan data kosong
+            renderRingkasan();
+            renderTabel();
+            renderChart();
+        }
     });
     </script>
-
-    <!--
-    ================================================================
-    PANDUAN LENGKAP LANGKAH DEMI LANGKAH
-    ================================================================
-
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║  LANGKAH 1: DAFTAR FONNTE                                   ║
-    ╚═══════════════════════════════════════════════════════════════╝
-
-    1. Buka browser, ketik: fonnte.com
-    2. Klik "Daftar" atau "Register"
-    3. Masukkan nomor WhatsApp aktif Anda
-    4. Tunggu kode OTP masuk ke WhatsApp, masukkan kode tersebut
-    5. Akun Fonnte Anda sudah jadi
-
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║  LANGKAH 2: HUBUNGKAN WHATSAPP KE FONNTE                    ║
-    ╚═══════════════════════════════════════════════════════════════╝
-
-    1. Di dashboard Fonnte, klik menu "Device" di sidebar kiri
-    2. Klik tombol "+ Tambah Device" atau "Tambah Perangkat"
-    3. Beri nama bebas, misal: "Tabungan"
-    4. Klik "Simpan" atau "Lanjutkan"
-    5. Akan muncul QR Code
-    6. Buka WhatsApp di HP Anda:
-       - Ketuk titik tiga di pojok kanan atas
-       - Pilih "Perangkat Tertaut"
-       - Ketuk "Tautkan Perangkat"
-       - Arahkan kamera ke QR Code di layar komputer
-    7. Setelah scan berhasil, status device akan berubah menjadi
-       "Connected" atau "Terhubung" (hijau)
-
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║  LANGKAH 3: SALIN TOKEN API                                  ║
-    ╚═══════════════════════════════════════════════════════════════╝
-
-    1. Masih di halaman "Device" di Fonnte
-    2. Cari device yang baru saja dibuat
-    3. Di sebelah nama device, ada kolom "Token"
-    4. Klik tombol "Salin" atau "Copy" di samping token
-    5. Token biasanya berupa string acak seperti: K3cEN8oHZ7Ery5vdY8XL
-
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║  LANGKAH 4: ISI KONFIGURASI DI DASHBOARD                     ║
-    ╚═══════════════════════════════════════════════════════════════╝
-
-    1. Buka Dashboard Tabungan Anda di browser
-    2. Klik tombol "Konfigurasi" di pojok kanan atas
-    3. Di field "API Token", paste token yang sudah disalin
-    4. Di field "Nomor WhatsApp Tujuan", isi nomor Anda:
-       - Jika nomor Anda: 0819-1278-5701
-       - Maka isi: 6281912785701
-       - HAPUS angka 0 di depan, GANTI dengan 62
-       - HAPUS tanda + dan tanda -
-    5. Klik tombol "Tes Koneksi" (hijau)
-    6. Tunggu beberapa detik...
-    7. Cek WhatsApp Anda — jika ada pesan tes, berarti berhasil!
-    8. Jika berhasil, klik "Simpan"
-
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║  LANGKAH 5: GUNAKAN DASHBOARD                                ║
-    ╚═══════════════════════════════════════════════════════════════╝
-
-    1. Pilih jenis transaksi (Masuk/Keluar)
-    2. Isi nominal (otomatis format ribuan)
-    3. Isi keterangan
-    4. Tanggal sudah otomatis hari ini (bisa diubah)
-    5. Klik "Simpan Transaksi"
-    6. Tunggu sebentar — pesan WhatsApp akan masuk ke HP Anda
-
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║  TROUBLESHOOTING                                             ║
-    ╚═══════════════════════════════════════════════════════════════╝
-
-    MASALAH: "Tes Koneksi gagal - CORS/Network Error"
-    PENYEBAB: Browser memblokir request langsung ke API Fonnte
-    SOLUSI:
-      - Coba lagi beberapa saat (CORS Proxy mungkin sedang down)
-      - Atau gunakan solusi permanen dengan PHP Proxy (lihat bawah)
-
-    MASALAH: "Device disconnect" atau "device not found"
-    PENYEBAB: WhatsApp di Fonnte terputus
-    SOLUSI:
-      - Buka Fonnte > Device
-      - Scan ulang QR Code
-
-    MASALAH: "Credit habis" atau "Limit reached"
-    PENYEBAB: Paket pesan Fonnte sudah habis
-    SOLUSI:
-      - Top up paket di Fonnte
-      - Atau buat akun baru (ada paket gratis)
-
-    MASALAH: Nomor salah / pesan tidak masuk
-    PENYEBAB: Format nomor tidak benar
-    SOLUSI:
-      - Pastikan diawali 62
-      - Tidak ada 0, +, spasi, atau tanda -
-      - Contoh benar: 6281912785701
-
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║  SOLUSI PERMANEN: PHP PROXY (opsional)                       ║
-    ║  Gunakan ini jika CORS Proxy sering gagal                    ║
-    ╚═══════════════════════════════════════════════════════════════╝
-
-    1. Sewa hosting PHP murah (Rp 10.000-30.000/bulan)
-    2. Buat file "wa_send.php" di hosting, isi:
-
-       <?php
-       header('Content-Type: application/json');
-       header('Access-Control-Allow-Origin: *');
-       header('Access-Control-Allow-Methods: POST, OPTIONS');
-       header('Access-Control-Allow-Headers: Content-Type');
-
-       if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-
-       $input = json_decode(file_get_contents('php://input'), true);
-       $token   = $input['token'] ?? '';
-       $target  = $input['target'] ?? '';
-       $message = $input['message'] ?? '';
-
-       if (!$token || !$target || !$message) {
-           echo json_encode(['success'=>false,'reason'=>'Data tidak lengkap']);
-           exit;
-       }
-
-       $ch = curl_init('https://api.fonnte.com/send');
-       curl_setopt_array($ch, [
-           CURLOPT_POST => true,
-           CURLOPT_RETURNTRANSFER => true,
-           CURLOPT_TIMEOUT => 15,
-           CURLOPT_HTTPHEADER => [
-               'Authorization: ' . $token,
-               'Content-Type: application/json'
-           ],
-           CURLOPT_POSTFIELDS => json_encode([
-               'target' => $target,
-               'message' => $message
-           ])
-       ]);
-
-       $response = curl_exec($ch);
-       $error = curl_error($ch);
-       curl_close($ch);
-
-       if ($error) {
-           echo json_encode(['success'=>false,'reason'=>$error]);
-       } else {
-           echo $response;
-       }
-       ?>
-
-    3. Upload file tersebut ke hosting
-    4. Di script HTML ini, ganti fungsi kirimWA():
-       - Ganti baris: const fonnteUrl = 'https://api.fonnte.com/send';
-       - Jadi: const fonnteUrl = 'https://domain-anda.com/wa_send.php';
-       - Dan hapus penggunaan fetchViaProxy, gunakan fetch biasa
-
-    5. Atau lebih simpel: tambahkan field "URL Proxy" di konfigurasi
-       dan simpan di localStorage, lalu gunakan di fungsi kirimWA
-
-    ================================================================
-    -->
 </body>
 </html>
 <script>
