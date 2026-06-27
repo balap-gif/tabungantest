@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Tabungan</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* ============================
+           CSS VARIABLES & BASE
+           ============================ */
+        :root {
+            --bg-primary: #060b14;
+            --bg-secondary: #0c1322;
+            --bg-card: rgba(12, 19, 34, 0.85);
+            --border-color: rgba(255,255,255,0.06);
+            --text-primary: #eef2f7;
+            --text-secondary: #8b9ab5;
+            --text-muted: #546380;
+            --green: #10b981;
+            --green-soft: rgba(16,185,129,0.12);
+            --red: #f43f5e;
+            --red-soft: rgba(244,63,94,0.12);
+            --cyan: #06b6d4;
+            --cyan-soft: rgba(6,182,212,0.12);
+            --amber: #f59e0b;
+            --amber-soft: rgba(245,158,11,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Latar belakang animasi gradien */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 600px 400px at 15% 20%, rgba(16,185,129,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 500px 500px at 85% 75%, rgba(6,182,212,0.05) 0%, transparent 70%),
+                radial-gradient(ellipse 400px 300px at 50% 50%, rgba(244,63,94,0.03) 0%, transparent 70%);
+            z-index: 0;
+            animation: bgShift 25s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes bgShift {
+            0%   { opacity: 1; transform: scale(1); }
+            50%  { opacity: 0.8; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Partikel dekoratif */
+        .particles { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            animation: pFloat linear infinite;
+        }
+        @keyframes pFloat {
+            0%   { transform: translateY(100vh) scale(0); opacity:0; }
+            15%  { opacity:1; }
+            85%  { opacity:0.6; }
+            100% { transform: translateY(-10vh) scale(1); opacity:0; }
+        }
+
+        /* ============================
+           NAVBAR
+           ============================ */
+        .navbar-custom {
+            background: rgba(6,11,20,0.92);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .brand {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--text-primary) !important;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand i { color: var(--green); font-size: 1.5rem; }
+        .brand span { color: var(--green); }
+        .nav-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+
+        .wa-indicator {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.7rem; color: var(--text-muted); margin-left: 6px;
+        }
+        .wa-dot { width:7px; height:7px; border-radius:50%; background: var(--text-muted); flex-shrink:0; }
+        .wa-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .wa-dot.off { background: var(--red); }
+
+        /* ============================
+           MAIN
+           ============================ */
+        .main-wrap { position:relative; z-index:1; padding: 1.5rem 0 3rem; }
+
+        /* ============================
+           SUMMARY CARDS
+           ============================ */
+        .s-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.3rem 1.4rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.35s;
+        }
+        .s-card::after {
+            content:''; position:absolute; top:0; left:0; right:0; height:3px;
+        }
+        .s-card.c-saldo::after  { background: linear-gradient(90deg, var(--cyan), #22d3ee); }
+        .s-card.c-masuk::after  { background: linear-gradient(90deg, var(--green), #34d399); }
+        .s-card.c-keluar::after { background: linear-gradient(90deg, var(--red), #fb7185); }
+        .s-card.c-total::after  { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+        .s-card:hover { transform: translateY(-5px); box-shadow: 0 12px 36px rgba(0,0,0,0.35); }
+
+        .s-icon {
+            width:46px; height:46px; border-radius:12px;
+            display:flex; align-items:center; justify-content:center; font-size:1.15rem;
+        }
+        .s-icon.i-saldo  { background: var(--cyan-soft); color: var(--cyan); }
+        .s-icon.i-masuk  { background: var(--green-soft); color: var(--green); }
+        .s-icon.i-keluar { background: var(--red-soft); color: var(--red); }
+        .s-icon.i-total  { background: var(--amber-soft); color: var(--amber); }
+
+        .s-label {
+            font-size:0.72rem; font-weight:600; color:var(--text-muted);
+            text-transform:uppercase; letter-spacing:0.6px; margin-bottom:2px;
+        }
+        .s-val { font-size:1.35rem; font-weight:700; line-height:1.25; }
+        .s-val.v-saldo  { color: var(--cyan); }
+        .s-val.v-masuk  { color: var(--green); }
+        .s-val.v-keluar { color: var(--red); }
+        .s-val.v-total  { color: var(--amber); }
+
+        /* ============================
+           SECTION CARD
+           ============================ */
+        .sec-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .sec-title {
+            font-size:1.05rem; font-weight:700; margin-bottom:1.2rem;
+            display:flex; align-items:center; gap:10px;
+        }
+        .sec-title i { font-size:0.95rem; color: var(--green); }
+
+        /* ============================
+           FORM
+           ============================ */
+        .flabel {
+            font-size:0.75rem; font-weight:600; color:var(--text-secondary);
+            margin-bottom:5px; text-transform:uppercase; letter-spacing:0.3px; display:block;
+        }
+        .finput, .fselect {
+            background: rgba(255,255,255,0.035);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            transition: all 0.25s;
+            width: 100%;
+        }
+        .finput:focus, .fselect:focus {
+            background: rgba(255,255,255,0.06);
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+            outline: none;
+            color: var(--text-primary);
+        }
+        .finput::placeholder { color: var(--text-muted); }
+        .fselect option { background: var(--bg-secondary); color: var(--text-primary); }
+
+        .nominal-wrap { position:relative; }
+        .nominal-wrap .prefix {
+            position:absolute; left:14px; top:50%; transform:translateY(-50%);
+            color:var(--text-muted); font-size:0.85rem; font-weight:600; pointer-events:none;
+        }
+        .nominal-wrap .finput { padding-left:40px; }
+
+        .btn-simpan {
+            background: linear-gradient(135deg, var(--green), #059669);
+            color:#fff; border:none; border-radius:var(--radius-sm);
+            padding:11px 26px; font-family:'Poppins',sans-serif;
+            font-weight:600; font-size:0.88rem; cursor:pointer;
+            transition: all 0.3s; display:inline-flex; align-items:center; gap:8px;
+        }
+        .btn-simpan:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(16,185,129,0.3); }
+        .btn-simpan:active { transform:translateY(0); }
+        .btn-simpan:disabled { opacity:0.5; cursor:not-allowed; transform:none!important; box-shadow:none!important; }
+        .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.5s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ============================
+           CHART
+           ============================ */
+        .chart-box { position:relative; height:280px; }
+
+        /* ============================
+           TABLE
+           ============================ */
+        .tbl-wrap { overflow-x:auto; }
+        .tbl { width:100%; border-collapse:separate; border-spacing:0; }
+        .tbl thead th {
+            background:rgba(255,255,255,0.025); color:var(--text-muted);
+            font-size:0.72rem; font-weight:600; text-transform:uppercase;
+            letter-spacing:0.5px; padding:11px 13px;
+            border-bottom:1px solid var(--border-color); white-space:nowrap;
+        }
+        .tbl tbody td {
+            padding:11px 13px; border-bottom:1px solid var(--border-color);
+            font-size:0.83rem; color:var(--text-secondary); vertical-align:middle;
+        }
+        .tbl tbody tr { transition:background 0.2s; }
+        .tbl tbody tr:hover { background:rgba(255,255,255,0.02); }
+
+        .badge-m {
+            background:var(--green-soft); color:var(--green);
+            padding:3px 11px; border-radius:20px; font-size:0.72rem; font-weight:600;
+        }
+        .badge-k {
+            background:var(--red-soft); color:var(--red);
+            padding:3px 11px; border-radius:20px; font-size:0.72rem; font-weight:600;
+        }
+
+        .btn-act {
+            background:rgba(255,255,255,0.04); border:1px solid var(--border-color);
+            color:var(--text-secondary); width:30px; height:30px; border-radius:8px;
+            display:inline-flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:all 0.2s; font-size:0.75rem;
+        }
+        .btn-act:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); }
+        .btn-act.del:hover { background:var(--red-soft); color:var(--red); border-color:rgba(244,63,94,0.3); }
+
+        /* ============================
+           FILTER BAR
+           ============================ */
+        .filter-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1rem; align-items:flex-end; }
+        .filter-row .fg { flex:1; min-width:140px; }
+
+        /* ============================
+           PAGINATION
+           ============================ */
+        .pag { display:flex; gap:5px; justify-content:center; margin-top:1rem; flex-wrap:wrap; }
+        .pg-btn {
+            background:rgba(255,255,255,0.04); border:1px solid var(--border-color);
+            color:var(--text-secondary); min-width:34px; height:34px; border-radius:8px;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:all 0.2s; font-size:0.82rem;
+            font-family:'Poppins',sans-serif; padding:0 4px;
+        }
+        .pg-btn:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); }
+        .pg-btn.active { background:var(--green); color:#fff; border-color:var(--green); }
+        .pg-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+        /* ============================
+           EMPTY STATE
+           ============================ */
+        .empty { text-align:center; padding:3rem 1rem; color:var(--text-muted); }
+        .empty i { font-size:2.5rem; margin-bottom:0.8rem; opacity:0.25; display:block; }
+        .empty p { font-size:0.85rem; }
+
+        /* ============================
+           TOAST
+           ============================ */
+        .toast-wrap { position:fixed; top:75px; right:16px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+        .tst {
+            background:rgba(12,19,34,0.95); border:1px solid var(--border-color);
+            border-radius:var(--radius-sm); padding:13px 18px;
+            display:flex; align-items:flex-start; gap:11px;
+            min-width:280px; max-width:400px;
+            box-shadow:0 12px 44px rgba(0,0,0,0.5);
+            backdrop-filter:blur(12px);
+            animation:tstIn 0.35s cubic-bezier(.4,0,.2,1);
+        }
+        .tst.out { animation:tstOut 0.25s forwards; }
+        .tst.ts { border-left:3px solid var(--green); }
+        .tst.te { border-left:3px solid var(--red); }
+        .tst.ti { border-left:3px solid var(--cyan); }
+        .tst-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+        .tst.ts .tst-icon { color:var(--green); }
+        .tst.te .tst-icon { color:var(--red); }
+        .tst.ti .tst-icon { color:var(--cyan); }
+        .tst-msg { font-size:0.82rem; color:var(--text-secondary); line-height:1.45; }
+        @keyframes tstIn  { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes tstOut { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
+
+        /* ============================
+           MODAL
+           ============================ */
+        .modal-bg {
+            position:fixed; inset:0; background:rgba(0,0,0,0.7);
+            backdrop-filter:blur(4px); z-index:2000;
+            display:flex; align-items:center; justify-content:center;
+            padding:16px; animation:mFadeIn 0.2s;
+        }
+        .modal-box {
+            background:var(--bg-secondary); border:1px solid var(--border-color);
+            border-radius:var(--radius); padding:1.5rem;
+            width:100%; max-width:480px;
+            animation:mSlideIn 0.3s cubic-bezier(.4,0,.2,1);
+            max-height: 90vh; overflow-y: auto;
+        }
+        @keyframes mFadeIn  { from{opacity:0} to{opacity:1} }
+        @keyframes mSlideIn { from{transform:scale(0.92) translateY(16px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+
+        .m-title { font-size:1.05rem; font-weight:700; margin-bottom:1.2rem; display:flex; align-items:center; gap:10px; }
+        .m-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:1.3rem; }
+        .btn-cancel {
+            background:rgba(255,255,255,0.04); border:1px solid var(--border-color);
+            color:var(--text-secondary); border-radius:var(--radius-sm);
+            padding:9px 18px; font-family:'Poppins',sans-serif; font-weight:500;
+            font-size:0.83rem; cursor:pointer; transition:all 0.2s;
+        }
+        .btn-cancel:hover { background:rgba(255,255,255,0.1); color:var(--text-primary); }
+        .btn-del {
+            background:linear-gradient(135deg,var(--red),#e11d48); color:#fff; border:none;
+            border-radius:var(--radius-sm); padding:9px 18px; font-family:'Poppins',sans-serif;
+            font-weight:600; font-size:0.83rem; cursor:pointer; transition:all 0.3s;
+        }
+        .btn-del:hover { box-shadow:0 6px 20px rgba(244,63,94,0.35); }
+        .btn-upd {
+            background:linear-gradient(135deg,var(--cyan),#0891b2); color:#fff; border:none;
+            border-radius:var(--radius-sm); padding:9px 18px; font-family:'Poppins',sans-serif;
+            font-weight:600; font-size:0.83rem; cursor:pointer; transition:all 0.3s;
+        }
+        .btn-upd:hover { box-shadow:0 6px 20px rgba(6,182,212,0.35); }
+        .btn-config-save {
+            background:linear-gradient(135deg,var(--amber),#d97706); color:#fff; border:none;
+            border-radius:var(--radius-sm); padding:9px 18px; font-family:'Poppins',sans-serif;
+            font-weight:600; font-size:0.83rem; cursor:pointer; transition:all 0.3s;
+        }
+        .btn-config-save:hover { box-shadow:0 6px 20px rgba(245,158,11,0.35); }
+
+        /* ============================
+           SCROLLBAR
+           ============================ */
+        ::-webkit-scrollbar { width:5px; height:5px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
+        ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.2); }
+
+        /* ============================
+           RESPONSIVE
+           ============================ */
+        @media(max-width:768px) {
+            .main-wrap { padding:1rem 0 2rem; }
+            .sec-card { padding:1rem; }
+            .s-val { font-size:1.1rem; }
+            .filter-row { flex-direction:column; }
+            .filter-row .fg { min-width:100%; }
+            .chart-box { height:220px; }
+            .tst { min-width:240px; max-width:calc(100vw - 32px); }
+        }
+
+        /* Animasi masuk untuk kartu */
+        .fade-up {
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.5s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+        .fade-up:nth-child(2) { animation-delay:0.05s; }
+        .fade-up:nth-child(3) { animation-delay:0.1s; }
+        .fade-up:nth-child(4) { animation-delay:0.15s; }
+
+        /* Info box di konfigurasi */
+        .info-box {
+            background: rgba(6,182,212,0.08);
+            border: 1px solid rgba(6,182,212,0.15);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .info-box i { color: var(--cyan); margin-right: 4px; }
+        .info-box a { color: var(--cyan); text-decoration: underline; }
+
+        /* Nomor halaman info */
+        .pag-info {
+            text-align:center; font-size:0.75rem; color:var(--text-muted);
+            margin-top:8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Partikel dekoratif -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <!-- ========================
+         NAVBAR
+         ======================== -->
+    <nav class="navbar-custom">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between">
+                <a class="brand" href="#">
+                    <i class="fa-solid fa-wallet"></i>
+                    Dashboard <span>Tabungan</span>
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="wa-indicator" id="waIndicator">
+                        <span class="wa-dot off" id="waDot"></span>
+                        <span id="waStatusText">WA belum dikonfigurasi</span>
+                    </span>
+                    <button class="nav-btn" onclick="bukaKonfigurasi()">
+                        <i class="fa-solid fa-gear"></i> Konfigurasi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========================
+         MAIN CONTENT
+         ======================== -->
+    <main class="main-wrap">
+        <div class="container">
+
+            <!-- ========== RINGKASAN KEUANGAN ========== -->
+            <div class="row g-3 mb-4" id="summaryCards">
+                <div class="col-6 col-lg-3 fade-up">
+                    <div class="s-card c-saldo">
+                        <div class="d-flex align-items-start justify-content-between mb-2">
+                            <div class="s-icon i-saldo"><i class="fa-solid fa-coins"></i></div>
+                        </div>
+                        <div class="s-label">Saldo Saat Ini</div>
+                        <div class="s-val v-saldo" id="valSaldo">Rp 0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 fade-up">
+                    <div class="s-card c-masuk">
+                        <div class="d-flex align-items-start justify-content-between mb-2">
+                            <div class="s-icon i-masuk"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        </div>
+                        <div class="s-label">Total Uang Masuk</div>
+                        <div class="s-val v-masuk" id="valMasuk">Rp 0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 fade-up">
+                    <div class="s-card c-keluar">
+                        <div class="d-flex align-items-start justify-content-between mb-2">
+                            <div class="s-icon i-keluar"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                        </div>
+                        <div class="s-label">Total Uang Keluar</div>
+                        <div class="s-val v-keluar" id="valKeluar">Rp 0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 fade-up">
+                    <div class="s-card c-total">
+                        <div class="d-flex align-items-start justify-content-between mb-2">
+                            <div class="s-icon i-total"><i class="fa-solid fa-receipt"></i></div>
+                        </div>
+                        <div class="s-label">Jumlah Transaksi</div>
+                        <div class="s-val v-total" id="valTotal">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== FORM + CHART ========== -->
+            <div class="row g-3 mb-4">
+                <!-- Form Tambah Transaksi -->
+                <div class="col-lg-5">
+                    <div class="sec-card">
+                        <div class="sec-title">
+                            <i class="fa-solid fa-plus-circle"></i> Tambah Transaksi
+                        </div>
+                        <form id="formTransaksi" onsubmit="return handleSimpan(event)">
+                            <div class="mb-3">
+                                <label class="flabel">Jenis Transaksi</label>
+                                <select class="fselect" id="fJenis" required>
+                                    <option value="">-- Pilih Jenis --</option>
+                                    <option value="masuk">Uang Masuk</option>
+                                    <option value="keluar">Uang Keluar</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="flabel">Nominal</label>
+                                <div class="nominal-wrap">
+                                    <span class="prefix">Rp</span>
+                                    <input type="text" class="finput" id="fNominal" placeholder="0" required autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="flabel">Keterangan</label>
+                                <input type="text" class="finput" id="fKeterangan" placeholder="Contoh: Gaji bulanan" required maxlength="200">
+                            </div>
+                            <div class="mb-3">
+                                <label class="flabel">Tanggal</label>
+                                <input type="date" class="finput" id="fTanggal" required>
+                            </div>
+                            <button type="submit" class="btn-simpan w-100 justify-content-center" id="btnSimpan">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Transaksi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Chart Statistik -->
+                <div class="col-lg-7">
+                    <div class="sec-card h-100">
+                        <div class="sec-title">
+                            <i class="fa-solid fa-chart-column"></i> Statistik Keuangan
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <div class="chart-box">
+                                    <canvas id="chartBar"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="chart-box">
+                                    <canvas id="chartDoughnut"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RIWAYAT TRANSAKSI ========== -->
+            <div class="sec-card">
+                <div class="sec-title">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Transaksi
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="filter-row">
+                    <div class="fg" style="min-width:200px;flex:2;">
+                        <label class="flabel">Pencarian</label>
+                        <input type="text" class="finput" id="filterSearch" placeholder="Cari keterangan..." oninput="renderTabel()">
+                    </div>
+                    <div class="fg">
+                        <label class="flabel">Jenis</label>
+                        <select class="fselect" id="filterJenis" onchange="renderTabel()">
+                            <option value="">Semua</option>
+                            <option value="masuk">Uang Masuk</option>
+                            <option value="keluar">Uang Keluar</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label class="flabel">Dari Tanggal</label>
+                        <input type="date" class="finput" id="filterDari" onchange="renderTabel()">
+                    </div>
+                    <div class="fg">
+                        <label class="flabel">Sampai Tanggal</label>
+                        <input type="date" class="finput" id="filterSampai" onchange="renderTabel()">
+                    </div>
+                </div>
+
+                <!-- Tabel -->
+                <div class="tbl-wrap">
+                    <table class="tbl" id="tblRiwayat">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Jenis</th>
+                                <th>Keterangan</th>
+                                <th>Nominal</th>
+                                <th>Saldo</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Empty state -->
+                <div class="empty" id="emptyState" style="display:none;">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>Belum ada transaksi. Mulai tambahkan transaksi pertama Anda.</p>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pag" id="pagination"></div>
+                <div class="pag-info" id="pagInfo"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================
+         MODAL: Edit Transaksi
+         ======================== -->
+    <div class="modal-bg" id="modalEdit" style="display:none;" onclick="if(event.target===this) tutupModal('modalEdit')">
+        <div class="modal-box">
+            <div class="m-title">
+                <i class="fa-solid fa-pen-to-square" style="color:var(--cyan)"></i> Edit Transaksi
+            </div>
+            <form id="formEdit" onsubmit="return handleEdit(event)">
+                <input type="hidden" id="eId">
+                <div class="mb-3">
+                    <label class="flabel">Jenis Transaksi</label>
+                    <select class="fselect" id="eJenis" required>
+                        <option value="masuk">Uang Masuk</option>
+                        <option value="keluar">Uang Keluar</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="flabel">Nominal</label>
+                    <div class="nominal-wrap">
+                        <span class="prefix">Rp</span>
+                        <input type="text" class="finput" id="eNominal" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="flabel">Keterangan</label>
+                    <input type="text" class="finput" id="eKeterangan" required maxlength="200">
+                </div>
+                <div class="mb-3">
+                    <label class="flabel">Tanggal</label>
+                    <input type="date" class="finput" id="eTanggal" required>
+                </div>
+                <div class="m-actions">
+                    <button type="button" class="btn-cancel" onclick="tutupModal('modalEdit')">Batal</button>
+                    <button type="submit" class="btn-upd"><i class="fa-solid fa-check"></i> Perbarui</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================
+         MODAL: Hapus Transaksi
+         ======================== -->
+    <div class="modal-bg" id="modalHapus" style="display:none;" onclick="if(event.target===this) tutupModal('modalHapus')">
+        <div class="modal-box">
+            <div class="m-title">
+                <i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i> Hapus Transaksi
+            </div>
+            <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.6;">
+                Apakah Anda yakin ingin menghapus transaksi <strong id="hapusInfo" style="color:var(--text-primary)"></strong>?
+                Tindakan ini tidak dapat dibatalkan dan saldo akan dihitung ulang.
+            </p>
+            <input type="hidden" id="hId">
+            <div class="m-actions">
+                <button type="button" class="btn-cancel" onclick="tutupModal('modalHapus')">Batal</button>
+                <button type="button" class="btn-del" onclick="handleHapus()"><i class="fa-solid fa-trash"></i> Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================
+         MODAL: Konfigurasi WhatsApp
+         ======================== -->
+    <div class="modal-bg" id="modalConfig" style="display:none;" onclick="if(event.target===this) tutupModal('modalConfig')">
+        <div class="modal-box">
+            <div class="m-title">
+                <i class="fa-brands fa-whatsapp" style="color:#25d366;font-size:1.2rem"></i> Konfigurasi WhatsApp
+            </div>
+
+            <div class="info-box">
+                <i class="fa-solid fa-circle-info"></i>
+                Dashboard ini mendukung <strong>Fonnte</strong> dan <strong>UltraMsg</strong> sebagai provider API WhatsApp.
+                Daftar di <a href="https://fonnte.com" target="_blank">fonnte.com</a> atau <a href="https://ultramsg.com" target="_blank">ultramsg.com</a> untuk mendapatkan token.
+                Konfigurasi disimpan di browser Anda (localStorage).
+            </div>
+
+            <div class="mb-3">
+                <label class="flabel">Provider</label>
+                <select class="fselect" id="cfgProvider" onchange="toggleConfigFields()">
+                    <option value="fonnte">Fonnte</option>
+                    <option value="ultramsg">UltraMsg</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="flabel">API Token</label>
+                <input type="text" class="finput" id="cfgToken" placeholder="Masukkan API token Anda">
+            </div>
+            <div class="mb-3" id="cfgInstanceWrap" style="display:none;">
+                <label class="flabel">Instance ID (UltraMsg)</label>
+                <input type="text" class="finput" id="cfgInstance" placeholder="Contoh: instance12345">
+            </div>
+            <div class="mb-3">
+                <label class="flabel">Nomor WhatsApp Tujuan</label>
+                <input type="text" class="finput" id="cfgTarget" placeholder="Contoh: 6281234567890">
+            </div>
+
+            <div class="m-actions">
+                <button type="button" class="btn-cancel" onclick="tutupModal('modalConfig')">Tutup</button>
+                <button type="button" class="btn-config-save" onclick="simpanKonfigurasi()">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================
+         JAVASCRIPT
+         ======================== -->
+    <script>
+    /* ============================================================
+       KONFIGURASI WHATSAPP
+       Disimpan di localStorage agar mudah diubah tanpa edit kode.
+       Untuk migrasi ke backend, pindahkan ke config.php
+       ============================================================ */
+    const WA_STORAGE_KEY = 'tabungan_wa_config';
+
+    /** Muat konfigurasi WhatsApp dari localStorage */
+    function muatWaConfig() {
+        try {
+            const saved = localStorage.getItem(WA_STORAGE_KEY);
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return { provider: 'fonnte', token: '', target: '', instanceId: '' };
+    }
+
+    /** Simpan konfigurasi WhatsApp ke localStorage */
+    function simpanWaConfig(cfg) {
+        localStorage.setItem(WA_STORAGE_KEY, JSON.stringify(cfg));
+    }
+
+    /* ============================================================
+       DATA LAYER (localStorage sebagai pengganti MySQL)
+
+       Jika ingin migrasi ke MySQL, buat tabel:
+       CREATE TABLE transaksi (
+           id INT AUTO_INCREMENT PRIMARY KEY,
+           tanggal DATE NOT NULL,
+           jenis ENUM('masuk','keluar') NOT NULL,
+           nominal DECIMAL(15,2) NOT NULL,
+           keterangan VARCHAR(200) NOT NULL,
+           saldo_setelah DECIMAL(15,2) NOT NULL,
+           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+       );
+       ============================================================ */
+    const STORAGE_KEY = 'tabungan_data';
+    const PER_PAGE = 8; // Jumlah item per halaman
+
+    /** Ambil semua transaksi dari localStorage */
+    function getData() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        } catch(e) {
+            return [];
+        }
+    }
+
+    /** Simpan seluruh data transaksi ke localStorage */
+    function setData(arr) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    /**
+     * Hitung ulang saldo_setelah untuk semua transaksi.
+     * Transaksi diurutkan berdasarkan tanggal, lalu id (urutan input).
+     * Ini menjamin konsistensi saldo meskipun ada edit/hapus.
+     */
+    function hitungUlangSaldo() {
+        const data = getData();
+        // Urutkan: tanggal asc, lalu id asc
+        data.sort((a, b) => {
+            const dc = a.tanggal.localeCompare(b.tanggal);
+            return dc !== 0 ? dc : (a.id - b.id);
+        });
+        let saldo = 0;
+        data.forEach(item => {
+            saldo += (item.jenis === 'masuk' ? item.nominal : -item.nominal);
+            item.saldo_setelah = saldo;
+        });
+        setData(data);
+        return data;
+    }
+
+    /** Ambil saldo terakhir */
+    function getSaldo() {
+        const data = hitungUlangSaldo();
+        return data.length > 0 ? data[data.length - 1].saldo_setelah : 0;
+    }
+
+    /** Total pemasukan */
+    function getTotalMasuk() {
+        return getData().filter(t => t.jenis === 'masuk').reduce((s, t) => s + t.nominal, 0);
+    }
+
+    /** Total pengeluaran */
+    function getTotalKeluar() {
+        return getData().filter(t => t.jenis === 'keluar').reduce((s, t) => s + t.nominal, 0);
+    }
+
+    /* ============================================================
+       FORMAT HELPERS
+       ============================================================ */
+
+    /** Format angka ke Rupiah */
+    function formatRp(n) {
+        return 'Rp ' + Math.abs(n).toLocaleString('id-ID');
+    }
+
+    /** Format tanggal ke format Indonesia */
+    function formatTgl(str) {
+        const d = new Date(str + 'T00:00:00');
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    /** Format input nominal (hanya angka) */
+    function formatNominalInput(val) {
+        // Hapus semua karakter selain angka
+        let num = val.replace(/\D/g, '');
+        if (!num) return '';
+        // Tambahkan pemisah ribuan
+        return parseInt(num, 10).toLocaleString('id-ID');
+    }
+
+    /** Parse nominal dari format Indonesia ke angka */
+    function parseNominal(val) {
+        const num = val.replace(/\D/g, '');
+        return parseInt(num, 10) || 0;
+    }
+
+    /** Sanitasi string untuk mencegah XSS */
+    function sanitize(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    /** Escape HTML untuk menampilkan di tabel */
+    function esc(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ============================================================
+       WHATSAPP API
+       Mendukung Fonnte dan UltraMsg.
+       Untuk backend PHP, ganti bagian ini dengan cURL ke API.
+       ============================================================ */
+
+    /**
+     * Kirim notifikasi WhatsApp
+     * @param {string} tanggal - Tanggal transaksi
+     * @param {string} keterangan - Keterangan transaksi
+     * @param {string} jenis - 'masuk' atau 'keluar'
+     * @param {number} nominal - Nominal transaksi
+     * @param {number} saldo - Saldo setelah transaksi
+     * @returns {Promise<boolean>} Berhasil atau gagal
+     */
+    async function kirimWA(tanggal, keterangan, jenis, nominal, saldo) {
+        const cfg = muatWaConfig();
+
+        // Cek apakah konfigurasi sudah lengkap
+        if (!cfg.token || !cfg.target) {
+            console.warn('WhatsApp belum dikonfigurasi');
+            return false;
+        }
+
+        // Format pesan sesuai permintaan
+        const emoji = jenis === 'masuk' ? '➕' : '➖';
+        const jenisText = jenis === 'masuk' ? 'Uang Masuk' : 'Uang Keluar';
+        const pesan = `💰 UPDATE TABUNGAN\n\n📅 Tanggal:\n${formatTgl(tanggal)}\n\n📝 Keterangan:\n${keterangan}\n\n${emoji} ${jenisText}:\n${formatRp(nominal)}\n\n💵 Saldo Saat Ini:\n${formatRp(saldo)}\n\nTerima kasih.`;
+
+        try {
+            if (cfg.provider === 'fonnte') {
+                // API Fonnte: https://api.fonnte.com/send
+                const res = await fetch('https://api.fonnte.com/send', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': cfg.token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ target: cfg.target, message: pesan })
+                });
+                const json = await res.json();
+                return json.status === true;
+            }
+            else if (cfg.provider === 'ultramsg') {
+                // API UltraMsg: https://api.ultramsg.com/{instance}/messages/chat
+                if (!cfg.instanceId) return false;
+                const res = await fetch(`https://api.ultramsg.com/${cfg.instanceId}/messages/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        token: cfg.token,
+                        to: cfg.target,
+                        body: pesan
+                    })
+                });
+                const json = await res.json();
+                return json.status === 'ok';
+            }
+        } catch (err) {
+            console.error('Gagal kirim WhatsApp:', err);
+        }
+        return false;
+    }
+
+    /* ============================================================
+       TOAST NOTIFICATION
+       Menggantikan alert() dengan toast yang lebih modern.
+       ============================================================ */
+
+    /**
+     * Tampilkan toast notifikasi
+     * @param {string} msg - Pesan yang ditampilkan
+     * @param {'success'|'error'|'info'} type - Tipe toast
+     */
+    function toast(msg, type = 'success') {
+        const wrap = document.getElementById('toastWrap');
+        const el = document.createElement('div');
+        const cls = type === 'success' ? 'ts' : type === 'error' ? 'te' : 'ti';
+        const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info';
+        el.className = `tst ${cls}`;
+        el.innerHTML = `<i class="fa-solid ${icon} tst-icon"></i><span class="tst-msg">${esc(msg)}</span>`;
+        wrap.appendChild(el);
+        // Hapus otomatis setelah 4 detik
+        setTimeout(() => {
+            el.classList.add('out');
+            setTimeout(() => el.remove(), 300);
+        }, 4000);
+    }
+
+    /* ============================================================
+       MODAL HELPERS
+       ============================================================ */
+
+    /** Buka modal berdasarkan ID */
+    function bukaModal(id) {
+        document.getElementById(id).style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    /** Tutup modal berdasarkan ID */
+    function tutupModal(id) {
+        document.getElementById(id).style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    /* ============================================================
+       RENDER: Ringkasan Keuangan
+       Memperbarui 4 kartu di bagian atas dashboard.
+       ============================================================ */
+    function renderRingkasan() {
+        const saldo = getSaldo();
+        const masuk = getTotalMasuk();
+        const keluar = getTotalKeluar();
+        const total = getData().length;
+
+        document.getElementById('valSaldo').textContent = formatRp(saldo);
+        document.getElementById('valMasuk').textContent = formatRp(masuk);
+        document.getElementById('valKeluar').textContent = formatRp(keluar);
+        document.getElementById('valTotal').textContent = total.toLocaleString('id-ID');
+    }
+
+    /* ============================================================
+       RENDER: Tabel Riwayat Transaksi
+       Mendukung pencarian, filter jenis, filter tanggal, dan pagination.
+       ============================================================ */
+    let currentPage = 1;
+
+    function renderTabel() {
+        const data = hitungUlangSaldo(); // Pastikan saldo terkini
+        const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+        const jenis = document.getElementById('filterJenis').value;
+        const dari = document.getElementById('filterDari').value;
+        const sampai = document.getElementById('filterSampai').value;
+
+        // Filter data
+        let filtered = data.filter(t => {
+            // Pencarian berdasarkan keterangan
+            if (search && !t.keterangan.toLowerCase().includes(search)) return false;
+            // Filter jenis
+            if (jenis && t.jenis !== jenis) return false;
+            // Filter dari tanggal
+            if (dari && t.tanggal < dari) return false;
+            // Filter sampai tanggal
+            if (sampai && t.tanggal > sampai) return false;
+            return true;
+        });
+
+        // Urutkan terbaru di atas (balikkan urutan)
+        filtered.reverse();
+
+        const totalFiltered = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(totalFiltered / PER_PAGE));
+
+        // Pastikan halaman saat ini valid
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const start = (currentPage - 1) * PER_PAGE;
+        const pageData = filtered.slice(start, start + PER_PAGE);
+
+        const tbody = document.getElementById('tblBody');
+        const emptyEl = document.getElementById('emptyState');
+        const tblEl = document.getElementById('tblRiwayat');
+
+        if (totalFiltered === 0) {
+            tblEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+        } else {
+            tblEl.style.display = '';
+            emptyEl.style.display = 'none';
+        }
+
+        // Render baris tabel
+        let html = '';
+        pageData.forEach((t, i) => {
+            const no = start + i + 1;
+            const badge = t.jenis === 'masuk'
+                ? '<span class="badge-m">Masuk</span>'
+                : '<span class="badge-k">Keluar</span>';
+            const nominalColor = t.jenis === 'masuk' ? 'color:var(--green)' : 'color:var(--red)';
+            const prefix = t.jenis === 'masuk' ? '+' : '-';
+
+            html += `<tr>
+                <td>${no}</td>
+                <td>${esc(formatTgl(t.tanggal))}</td>
+                <td>${badge}</td>
+                <td>${esc(t.keterangan)}</td>
+                <td style="${nominalColor};font-weight:600;white-space:nowrap;">${prefix} ${formatRp(t.nominal)}</td>
+                <td style="color:var(--cyan);font-weight:600;white-space:nowrap;">${formatRp(t.saldo_setelah)}</td>
+                <td style="white-space:nowrap;">
+                    <button class="btn-act" title="Edit" onclick="bukaEdit(${t.id})"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn-act del" title="Hapus" onclick="bukaHapus(${t.id})" style="margin-left:4px;"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+
+        // Render pagination
+        renderPagination(totalPages, totalFiltered);
+    }
+
+    /** Render tombol pagination */
+    function renderPagination(totalPages, totalItems) {
+        const pag = document.getElementById('pagination');
+        const info = document.getElementById('pagInfo');
+
+        if (totalPages <= 1) {
+            pag.innerHTML = '';
+            info.textContent = totalItems > 0 ? `Menampilkan ${totalItems} transaksi` : '';
+            return;
+        }
+
+        let html = '';
+        // Tombol sebelumnya
+        html += `<button class="pg-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left" style="font-size:0.7rem"></i></button>`;
+
+        // Logika penomoran halaman dengan ellipsis
+        const pages = [];
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push('...');
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                pages.push(i);
+            }
+            if (currentPage < totalPages - 2) pages.push('...');
+            pages.push(totalPages);
+        }
+
+        pages.forEach(p => {
+            if (p === '...') {
+                html += `<span style="color:var(--text-muted);display:flex;align-items:center;padding:0 4px;">...</span>`;
+            } else {
+                html += `<button class="pg-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+            }
+        });
+
+        // Tombol berikutnya
+        html += `<button class="pg-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right" style="font-size:0.7rem"></i></button>`;
+
+        pag.innerHTML = html;
+
+        const startItem = (currentPage - 1) * PER_PAGE + 1;
+        const endItem = Math.min(currentPage * PER_PAGE, totalItems);
+        info.textContent = `Menampilkan ${startItem}-${endItem} dari ${totalItems} transaksi`;
+    }
+
+    /** Navigasi ke halaman tertentu */
+    function goPage(p) {
+        currentPage = p;
+        renderTabel();
+    }
+
+    /* ============================================================
+       RENDER: Chart.js
+       Dua chart: Bar (perbandingan bulanan) dan Doughnut (proporsi)
+       ============================================================ */
+    let chartBar = null;
+    let chartDoughnut = null;
+
+    /** Warna chart */
+    const CHART_GREEN = 'rgba(16, 185, 129, 0.85)';
+    const CHART_GREEN_BG = 'rgba(16, 185, 129, 0.15)';
+    const CHART_RED = 'rgba(244, 63, 94, 0.85)';
+    const CHART_RED_BG = 'rgba(244, 63, 94, 0.15)';
+    const CHART_CYAN = 'rgba(6, 182, 212, 0.85)';
+    const CHART_CYAN_BG = 'rgba(6, 182, 212, 0.15)';
+
+    /** Konfigurasi default Chart.js untuk tema gelap */
+    const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#8b9ab5',
+                    font: { family: 'Poppins', size: 11 },
+                    padding: 12,
+                    usePointStyle: true,
+                    pointStyleWidth: 8
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(12, 19, 34, 0.95)',
+                titleColor: '#eef2f7',
+                bodyColor: '#8b9ab5',
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 10,
+                titleFont: { family: 'Poppins', weight: '600' },
+                bodyFont: { family: 'Poppins' },
+                callbacks: {
+                    label: function(ctx) {
+                        return ctx.dataset.label + ': ' + formatRp(ctx.parsed.y || ctx.parsed);
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: '#546380', font: { family: 'Poppins', size: 10 } },
+                grid: { color: 'rgba(255,255,255,0.03)' },
+                border: { color: 'rgba(255,255,255,0.06)' }
+            },
+            y: {
+                ticks: {
+                    color: '#546380',
+                    font: { family: 'Poppins', size: 10 },
+                    callback: function(val) {
+                        if (val >= 1000000) return (val / 1000000).toFixed(1) + 'jt';
+                        if (val >= 1000) return (val / 1000).toFixed(0) + 'rb';
+                        return val;
+                    }
+                },
+                grid: { color: 'rgba(255,255,255,0.03)' },
+                border: { color: 'rgba(255,255,255,0.06)' }
+            }
+        }
+    };
+
+    /** Update kedua chart berdasarkan data terkini */
+    function renderChart() {
+        const data = hitungUlangSaldo();
+
+        // --- Data untuk Bar Chart: Perbandingan 6 bulan terakhir ---
+        const bulanLabels = [];
+        const bulanMasuk = [];
+        const bulanKeluar = [];
+        const now = new Date();
+
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const prefix = `${y}-${m}`;
+            bulanLabels.push(d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }));
+
+            const masukBulan = data.filter(t => t.tanggal.startsWith(prefix) && t.jenis === 'masuk').reduce((s, t) => s + t.nominal, 0);
+            const keluarBulan = data.filter(t => t.tanggal.startsWith(prefix) && t.jenis === 'keluar').reduce((s, t) => s + t.nominal, 0);
+            bulanMasuk.push(masukBulan);
+            bulanKeluar.push(keluarBulan);
+        }
+
+        // --- Data untuk Doughnut Chart: Total masuk vs keluar ---
+        const totalM = getTotalMasuk();
+        const totalK = getTotalKeluar();
+
+        // Destroy chart lama jika ada (mencegah error Canvas)
+        if (chartBar) chartBar.destroy();
+        if (chartDoughnut) chartDoughnut.destroy();
+
+        // Bar Chart
+        const ctxBar = document.getElementById('chartBar').getContext('2d');
+        chartBar = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: bulanLabels,
+                datasets: [
+                    {
+                        label: 'Pemasukan',
+                        data: bulanMasuk,
+                        backgroundColor: CHART_GREEN,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.6
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: bulanKeluar,
+                        backgroundColor: CHART_RED,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.6
+                    }
+                ]
+            },
+            options: {
+                ...chartDefaults,
+                plugins: {
+                    ...chartDefaults.plugins,
+                    legend: { ...chartDefaults.plugins.legend, position: 'top' }
+                }
+            }
+        });
+
+        // Doughnut Chart
+        const ctxDoughnut = document.getElementById('chartDoughnut').getContext('2d');
+        const hasData = totalM > 0 || totalK > 0;
+        chartDoughnut = new Chart(ctxDoughnut, {
+            type: 'doughnut',
+            data: {
+                labels: hasData ? ['Pemasukan', 'Pengeluaran'] : ['Belum ada data'],
+                datasets: [{
+                    data: hasData ? [totalM, totalK] : [1],
+                    backgroundColor: hasData ? [CHART_GREEN, CHART_RED] : ['rgba(255,255,255,0.05)'],
+                    borderColor: hasData ? ['rgba(16,185,129,0.3)', 'rgba(244,63,94,0.3)'] : ['rgba(255,255,255,0.08)'],
+                    borderWidth: 2,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#8b9ab5',
+                            font: { family: 'Poppins', size: 11 },
+                            padding: 14,
+                            usePointStyle: true,
+                            pointStyleWidth: 8
+                        }
+                    },
+                    tooltip: {
+                        ...chartDefaults.plugins.tooltip,
+                        callbacks: {
+                            label: function(ctx) {
+                                if (!hasData) return 'Belum ada data';
+                                return ctx.label + ': ' + formatRp(ctx.parsed);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /* ============================================================
+       CRUD: TAMBAH TRANSAKSI
+       Validasi input, simpan data, kirim WA, update UI.
+       ============================================================ */
+    async function handleSimpan(e) {
+        e.preventDefault();
+
+        const jenis = document.getElementById('fJenis').value;
+        const nominalRaw = parseNominal(document.getElementById('fNominal').value);
+        const keterangan = document.getElementById('fKeterangan').value.trim();
+        const tanggal = document.getElementById('fTanggal').value;
+
+        // Validasi
+        if (!jenis) { toast('Pilih jenis transaksi terlebih dahulu.', 'error'); return false; }
+        if (nominalRaw <= 0) { toast('Nominal harus lebih dari 0.', 'error'); return false; }
+        if (!keterangan) { toast('Keterangan tidak boleh kosong.', 'error'); return false; }
+        if (!tanggal) { toast('Tanggal harus diisi.', 'error'); return false; }
+
+        // Cek saldo cukup untuk pengeluaran
+        const saldoSekarang = getSaldo();
+        if (jenis === 'keluar' && nominalRaw > saldoSekarang) {
+            toast(`Saldo tidak mencukupi. Saldo saat ini: ${formatRp(saldoSekarang)}`, 'error');
+            return false;
+        }
+
+        // Tampilkan loading
+        const btn = document.getElementById('btnSimpan');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Menyimpan...';
+
+        try {
+            // Hitung saldo setelah transaksi
+            const saldoSetelah = jenis === 'masuk'
+                ? saldoSekarang + nominalRaw
+                : saldoSekarang - nominalRaw;
+
+            // Simpan ke localStorage
+            const data = getData();
+            const id = Date.now();
+            data.push({
+                id,
+                tanggal,
+                jenis,
+                nominal: nominalRaw,
+                keterangan: sanitize(keterangan),
+                saldo_setelah: saldoSetelah,
+                created_at: new Date().toISOString()
+            });
+            setData(data);
+
+            // Kirim notifikasi WhatsApp (async, tidak memblokir)
+            kirimWA(tanggal, keterangan, jenis, nominalRaw, saldoSetelah)
+                .then(ok => {
+                    if (ok) toast('Notifikasi WhatsApp terkirim.', 'info');
+                });
+
+            // Update seluruh UI
+            renderRingkasan();
+            renderTabel();
+            renderChart();
+
+            // Reset form
+            document.getElementById('formTransaksi').reset();
+            setTanggalHariIni();
+
+            toast('Transaksi berhasil disimpan!', 'success');
+        } catch (err) {
+            toast('Gagal menyimpan transaksi.', 'error');
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Transaksi';
+        }
+
+        return false;
+    }
+
+    /* ============================================================
+       CRUD: EDIT TRANSAKSI
+       Buka modal edit dengan data transaksi yang dipilih.
+       ============================================================ */
+
+    /** Buka modal edit dan isi data */
+    function bukaEdit(id) {
+        const data = getData();
+        const item = data.find(t => t.id === id);
+        if (!item) return;
+
+        document.getElementById('eId').value = id;
+        document.getElementById('eJenis').value = item.jenis;
+        document.getElementById('eNominal').value = formatNominalInput(String(item.nominal));
+        document.getElementById('eKeterangan').value = item.keterangan;
+        document.getElementById('eTanggal').value = item.tanggal;
+        bukaModal('modalEdit');
+    }
+
+    /** Handle submit edit */
+    function handleEdit(e) {
+        e.preventDefault();
+
+        const id = parseInt(document.getElementById('eId').value);
+        const jenis = document.getElementById('eJenis').value;
+        const nominalRaw = parseNominal(document.getElementById('eNominal').value);
+        const keterangan = document.getElementById('eKeterangan').value.trim();
+        const tanggal = document.getElementById('eTanggal').value;
+
+        // Validasi
+        if (nominalRaw <= 0) { toast('Nominal harus lebih dari 0.', 'error'); return false; }
+        if (!keterangan) { toast('Keterangan tidak boleh kosong.', 'error'); return false; }
+        if (!tanggal) { toast('Tanggal harus diisi.', 'error'); return false; }
+
+        // Update data
+        const data = getData();
+        const idx = data.findIndex(t => t.id === id);
+        if (idx === -1) { toast('Transaksi tidak ditemukan.', 'error'); return false; }
+
+        data[idx].jenis = jenis;
+        data[idx].nominal = nominalRaw;
+        data[idx].keterangan = sanitize(keterangan);
+        data[idx].tanggal = tanggal;
+        setData(data);
+
+        // Hitung ulang semua saldo
+        hitungUlangSaldo();
+
+        // Update UI
+        renderRingkasan();
+        renderTabel();
+        renderChart();
+
+        tutupModal('modalEdit');
+        toast('Transaksi berhasil diperbarui!', 'success');
+        return false;
+    }
+
+    /* ============================================================
+       CRUD: HAPUS TRANSAKSI
+       Konfirmasi lalu hapus, hitung ulang saldo.
+       ============================================================ */
+
+    /** Buka modal konfirmasi hapus */
+    function bukaHapus(id) {
+        const data = getData();
+        const item = data.find(t => t.id === id);
+        if (!item) return;
+
+        document.getElementById('hId').value = id;
+        document.getElementById('hapusInfo').textContent =
+            `"${item.keterangan}" (${formatRp(item.nominal)})`;
+        bukaModal('modalHapus');
+    }
+
+    /** Handle hapus transaksi */
+    function handleHapus() {
+        const id = parseInt(document.getElementById('hId').value);
+        const data = getData();
+        const filtered = data.filter(t => t.id !== id);
+        setData(filtered);
+
+        // Hitung ulang saldo
+        hitungUlangSaldo();
+
+        // Update UI
+        renderRingkasan();
+        renderTabel();
+        renderChart();
+
+        tutupModal('modalHapus');
+        toast('Transaksi berhasil dihapus.', 'success');
+    }
+
+    /* ============================================================
+       KONFIGURASI WHATSAPP
+       Modal untuk mengatur provider, token, dan nomor tujuan.
+       ============================================================ */
+
+    /** Buka modal konfigurasi dan muat data tersimpan */
+    function bukaKonfigurasi() {
+        const cfg = muatWaConfig();
+        document.getElementById('cfgProvider').value = cfg.provider || 'fonnte';
+        document.getElementById('cfgToken').value = cfg.token || '';
+        document.getElementById('cfgTarget').value = cfg.target || '';
+        document.getElementById('cfgInstance').value = cfg.instanceId || '';
+        toggleConfigFields();
+        bukaModal('modalConfig');
+    }
+
+    /** Toggle tampilan field Instance ID berdasarkan provider */
+    function toggleConfigFields() {
+        const provider = document.getElementById('cfgProvider').value;
+        document.getElementById('cfgInstanceWrap').style.display = provider === 'ultramsg' ? 'block' : 'none';
+    }
+
+    /** Simpan konfigurasi WhatsApp */
+    function simpanKonfigurasi() {
+        const cfg = {
+            provider: document.getElementById('cfgProvider').value,
+            token: document.getElementById('cfgToken').value.trim(),
+            target: document.getElementById('cfgTarget').value.trim(),
+            instanceId: document.getElementById('cfgInstance').value.trim()
+        };
+        simpanWaConfig(cfg);
+        updateWaIndicator();
+        tutupModal('modalConfig');
+        toast('Konfigurasi WhatsApp berhasil disimpan.', 'success');
+    }
+
+    /** Update indikator status WhatsApp di navbar */
+    function updateWaIndicator() {
+        const cfg = muatWaConfig();
+        const dot = document.getElementById('waDot');
+        const txt = document.getElementById('waStatusText');
+        if (cfg.token && cfg.target) {
+            dot.className = 'wa-dot on';
+            txt.textContent = cfg.provider.toUpperCase() + ' terhubung';
+        } else {
+            dot.className = 'wa-dot off';
+            txt.textContent = 'WA belum dikonfigurasi';
+        }
+    }
+
+    /* ============================================================
+       PARTIKEL DEKORATIF
+       Membuat efek partikel mengambang di latar belakang.
+       ============================================================ */
+    function buatPartikel() {
+        const container = document.getElementById('particles');
+        const jumlah = 25;
+        for (let i = 0; i < jumlah; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 3 + 1;
+            const left = Math.random() * 100;
+            const durasi = Math.random() * 15 + 15;
+            const delay = Math.random() * 20;
+            const colors = ['rgba(16,185,129,0.25)', 'rgba(6,182,212,0.2)', 'rgba(245,158,11,0.15)'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            p.style.cssText = `
+                width:${size}px; height:${size}px;
+                left:${left}%; background:${color};
+                animation-duration:${durasi}s;
+                animation-delay:${delay}s;
+                box-shadow: 0 0 ${size * 3}px ${color};
+            `;
+            container.appendChild(p);
+        }
+    }
+
+    /* ============================================================
+       FORMAT INPUT NOMINAL SECARA REAL-TIME
+       Menampilkan pemisah ribuan saat user mengetik.
+       ============================================================ */
+    function setupNominalFormatting() {
+        // Form utama
+        const fNom = document.getElementById('fNominal');
+        fNom.addEventListener('input', function() {
+            const pos = this.selectionStart;
+            const oldLen = this.value.length;
+            this.value = formatNominalInput(this.value);
+            const newLen = this.value.length;
+            // Pertahankan posisi kursor
+            this.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
+        });
+
+        // Form edit
+        const eNom = document.getElementById('eNominal');
+        eNom.addEventListener('input', function() {
+            const pos = this.selectionStart;
+            const oldLen = this.value.length;
+            this.value = formatNominalInput(this.value);
+            const newLen = this.value.length;
+            this.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
+        });
+    }
+
+    /* ============================================================
+       SET TANGGAL HARI INI
+       Mengisi field tanggal dengan hari ini secara otomatis.
+       ============================================================ */
+    function setTanggalHariIni() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('fTanggal').value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    /* ============================================================
+       KEYBOARD SHORTCUT
+       Escape untuk menutup modal.
+       ============================================================ */
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            ['modalEdit', 'modalHapus', 'modalConfig'].forEach(id => {
+                if (document.getElementById(id).style.display !== 'none') {
+                    tutupModal(id);
+                }
+            });
+        }
+    });
+
+    /* ============================================================
+       INISIALISASI APLIKASI
+       Dijalankan saat halaman selesai dimuat.
+       ============================================================ */
+    document.addEventListener('DOMContentLoaded', function() {
+        // Buat partikel dekoratif
+        buatPartikel();
+
+        // Set tanggal hari ini di form
+        setTanggalHariIni();
+
+        // Setup format nominal real-time
+        setupNominalFormatting();
+
+        // Update indikator WhatsApp
+        updateWaIndicator();
+
+        // Render seluruh dashboard
+        renderRingkasan();
+        renderTabel();
+        renderChart();
+    });
+    </script>
+
+    <!--
+    ============================================================
+    PANDUAN MIGRASI KE PHP + MYSQL
+    ============================================================
+
+    Jika Anda ingin menggunakan backend PHP + MySQL, berikut
+    struktur yang disarankan:
+
+    -- Struktur Folder --
+    /tabungan
+    ├── /assets
+    │   ├── /css
+    │   │   └── style.css          (pindahkan CSS dari <style>)
+    │   ├── /js
+    │   │   └── app.js             (pindahkan JS dari <script>)
+    │   └── /images
+    ├── /config
+    │   ├── config.php             (database & WA config)
+    │   └── wa_config.php          (konfigurasi WhatsApp API)
+    ├── /api
+    │   ├── transaksi_create.php   (POST: tambah transaksi)
+    │   ├── transaksi_read.php     (GET: ambil semua transaksi)
+    │   ├── transaksi_update.php   (PUT: edit transaksi)
+    │   ├── transaksi_delete.php   (DELETE: hapus transaksi)
+    │   └── wa_send.php            (POST: kirim WhatsApp)
+    ├── /database
+    │   └── schema.sql             (skema database)
+    └── index.php                  (halaman utama)
+
+    -- schema.sql --
+    CREATE DATABASE IF NOT EXISTS db_tabungan;
+    USE db_tabungan;
+
+    CREATE TABLE transaksi (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        tanggal DATE NOT NULL,
+        jenis ENUM('masuk','keluar') NOT NULL,
+        nominal DECIMAL(15,2) NOT NULL CHECK (nominal > 0),
+        keterangan VARCHAR(200) NOT NULL,
+        saldo_setelah DECIMAL(15,2) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_tanggal (tanggal),
+        INDEX idx_jenis (jenis)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+    -- config.php --
+    <?php
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'db_tabungan');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+
+    // WhatsApp Config
+    define('WA_PROVIDER', 'fonnte');   // 'fonnte' atau 'ultramsg'
+    define('WA_TOKEN', '');            // Isi token API
+    define('WA_TARGET', '');           // Isi nomor WhatsApp (628xxx)
+    define('WA_INSTANCE', '');         // Instance ID (hanya UltraMsg)
+    ?>
+
+    -- transaksi_create.php (contoh) --
+    <?php
+    header('Content-Type: application/json');
+    require_once '../config/config.php';
+
+    $pdo = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $jenis = $_POST['jenis'] ?? '';
+    $nominal = floatval($_POST['nominal'] ?? 0);
+    $keterangan = $_POST['keterangan'] ?? '';
+    $tanggal = $_POST['tanggal'] ?? '';
+
+    // Validasi
+    if (!in_array($jenis, ['masuk','keluar']) || $nominal <= 0 || !$keterangan || !$tanggal) {
+        echo json_encode(['success'=>false,'message'=>'Input tidak valid']);
+        exit;
+    }
+
+    // Ambil saldo terakhir
+    $stmt = $pdo->query("SELECT saldo_setelah FROM transaksi ORDER BY tanggal ASC, id ASC");
+    $saldo = 0;
+    while ($row = $stmt->fetch()) $saldo = floatval($row['saldo_setelah']);
+
+    // Cek saldo cukup
+    if ($jenis === 'keluar' && $nominal > $saldo) {
+        echo json_encode(['success'=>false,'message'=>'Saldo tidak mencukupi']);
+        exit;
+    }
+
+    $saldoSetelah = $jenis === 'masuk' ? $saldo + $nominal : $saldo - $nominal;
+
+    $stmt = $pdo->prepare("INSERT INTO transaksi (tanggal, jenis, nominal, keterangan, saldo_setelah) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$tanggal, $jenis, $nominal, $keterangan, $saldoSetelah]);
+
+    echo json_encode(['success'=>true,'id'=>$pdo->lastInsertId(),'saldo_setelah'=>$saldoSetelah]);
+    ?>
+
+    -- wa_send.php (contoh Fonnte) --
+    <?php
+    header('Content-Type: application/json');
+    require_once '../config/config.php';
+
+    $tanggal = $_POST['tanggal'] ?? '';
+    $keterangan = $_POST['keterangan'] ?? '';
+    $jenis = $_POST['jenis'] ?? '';
+    $nominal = $_POST['nominal'] ?? 0;
+    $saldo = $_POST['saldo'] ?? 0;
+
+    $emoji = $jenis === 'masuk' ? '➕' : '➖';
+    $jenisText = $jenis === 'masuk' ? 'Uang Masuk' : 'Uang Keluar';
+    $nominalFmt = 'Rp ' . number_format(abs($nominal), 0, ',', '.');
+    $saldoFmt = 'Rp ' . number_format(abs($saldo), 0, ',', '.');
+
+    $pesan = "💰 UPDATE TABUNGAN\n\n📅 Tanggal:\n{$tanggal}\n\n📝 Keterangan:\n{$keterangan}\n\n{$emoji} {$jenisText}:\n{$nominalFmt}\n\n💵 Saldo Saat Ini:\n{$saldoFmt}\n\nTerima kasih.";
+
+    if (WA_PROVIDER === 'fonnte') {
+        $ch = curl_init('https://api.fonnte.com/send');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: ' . WA_TOKEN,
+                'Content-Type: application/json'
+            ],
+            CURLOPT_POSTFIELDS => json_encode([
+                'target' => WA_TARGET,
+                'message' => $pesan
+            ])
+        ]);
+        $result = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+        echo json_encode(['success' => $result['status'] ?? false]);
+    }
+    ?>
+    ============================================================
+    -->
+</body>
+</html>
